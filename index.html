@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>OMP Moments — Capturing Unseen Moments</title>
+<meta name="description" content="OMP Moments — top Lagos event photographer. Wedding, corporate event and portrait photography and videography by OMP Studios.">
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@300;400;500&display=swap">
+<style>
+:root{
+  --bg:#000;
+  --ink:#f4f2ef;
+  --dim:#8c8783;
+  --line:rgba(244,242,239,.28);
+  --pad:clamp(14px, 2.6vw, 34px);
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --hw:min(56vw, 640px);
+  --persp:1150px;
+  --safe-top:env(safe-area-inset-top, 0px);
+  --safe-right:env(safe-area-inset-right, 0px);
+  --safe-bottom:env(safe-area-inset-bottom, 0px);
+  --safe-left:env(safe-area-inset-left, 0px);
+  --tap:44px;
+  --serif:"Playfair Display", "Times New Roman", serif;
+  --sans:"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --cw:200px;
+  --chips-top:calc(var(--pad) * .8 + 50px + var(--safe-top));
+  --gpt:calc(var(--pad) * 3.4 + var(--safe-top));
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:#000;scrollbar-gutter:stable;-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:var(--sans);font-weight:300;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden;
+  min-height:100vh;min-height:100dvh;
+  overscroll-behavior-y:none;
+}
+body.locked{overflow:hidden;height:100vh;height:100dvh}
+img{display:block;max-width:100%}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+a{-webkit-tap-highlight-color:transparent}
+svg.logo{display:block;height:100%;width:auto;fill:currentColor}
+
+/* ---------- layers ---------- */
+#scrolltrack{height:116vh;pointer-events:none}
+
+#stage{
+  position:fixed;inset:0;z-index:10;
+  perspective:var(--persp);perspective-origin:50% 50%;
+  overflow:hidden;touch-action:none;
+  user-select:none;-webkit-user-select:none;
+  transition:opacity .6s var(--ease), filter .6s var(--ease);
+}
+@media (pointer:coarse){#stage{touch-action:pan-y}}
+
+#world{
+  position:absolute; top:50%; left:50%;
+  width:0; height:0;
+  transform-style:preserve-3d;
+  will-change:transform;
+}
+#orb{
+  position:absolute; top:0; left:0;
+  width:0; height:0;
+  transform-style:preserve-3d;
+  opacity:1;
+  transform:none;
+}
+#headline{
+  position:absolute; top:0; left:0;
+  margin:0;
+  width:var(--hw);
+  margin-left:calc(var(--hw) / -2);
+  text-align:center;
+  font-family:var(--serif);
+  font-weight:400;
+  font-size:clamp(25px, 3.7vw, 55px);
+  line-height:1.06;
+  letter-spacing:-.005em;
+  color:#fff;
+  text-shadow:0 2px 34px rgba(0,0,0,.55);
+  pointer-events:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+#headline .inner{
+  position:absolute; top:0; left:0;
+  width:100%;
+  transform:translateY(-50%);
+}
+#headline .inner span{
+  display:inline-block;
+  opacity:0;
+  transform:translateY(.42em);
+  filter:blur(7px);
+  transition:
+    opacity 1.05s var(--ease) calc(.9s + var(--i) * .085s),
+    transform 1.15s var(--ease) calc(.9s + var(--i) * .085s),
+    filter 1.05s var(--ease) calc(.9s + var(--i) * .085s);
+}
+body.revealed #headline .inner span{opacity:1;transform:none;filter:blur(0)}
+
+/* cards */
+.card{
+  position:absolute;top:0;left:0;
+  width:var(--cw);
+  height:calc(var(--cw) / 1.5);
+  margin-left:calc(var(--cw) / -2);
+  margin-top:calc(var(--cw) / -3);
+  cursor:pointer;
+}
+.card.tall{height:calc(var(--cw) * 1.25);margin-top:calc(var(--cw) * -.625)}
+.card figure{
+  position:absolute;inset:0;overflow:hidden;border-radius:3px;background:#0a0a0a;
+  transition:transform .5s var(--ease);
+}
+.card:hover figure{transform:scale(1.045)}
+.card figure::after{
+  content:"";position:absolute;inset:0;
+  background:rgba(0,0,0,var(--d,0));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07);
+  border-radius:3px;pointer-events:none;
+}
+.card img{width:100%;height:100%;object-fit:cover;object-position:50% 28%;opacity:0;-webkit-user-drag:none;user-select:none}
+.card img.in{opacity:1}
+body.revealed .card img{transition:opacity .8s ease-out}
+
+.vig{
+  position:fixed;inset:0;z-index:12;pointer-events:none;
+  background:radial-gradient(ellipse 88% 92% at 50% 50%, transparent 48%, rgba(0,0,0,.26) 80%, rgba(0,0,0,.72) 100%);
+  transition:opacity .6s var(--ease);
+}
+body.gridview .vig, body.lit .vig{opacity:0}
+
+/* ---------- archive ---------- */
+#grid{
+  position:fixed;inset:0;z-index:20;
+  overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  padding:var(--gpt) calc(var(--pad) + var(--safe-right)) calc(var(--pad) * 4 + var(--safe-bottom)) calc(var(--pad) + var(--safe-left));
+  background:#000;opacity:0;pointer-events:none;visibility:hidden;
+  transition:opacity .6s var(--ease), visibility 0s linear .6s;
+}
+body.gridview #grid{opacity:1;pointer-events:auto;visibility:visible;transition:opacity .6s var(--ease), visibility 0s}
+body.gridview #stage{opacity:0;filter:blur(14px);pointer-events:none}
+.g-wrap{max-width:1680px;margin:0 auto}
+.g-intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(18px,4vw,64px);align-items:end;padding:clamp(8px,2vw,24px) 0 clamp(22px,3vw,40px)}
+.g-kicker{font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:rgba(244,242,239,.5);margin-bottom:14px}
+.g-intro h2{font-family:var(--serif);font-weight:400;font-size:clamp(34px, 5.4vw, 76px);line-height:1.02;letter-spacing:-.01em}
+.g-lede{font-size:14px;line-height:1.65;color:rgba(244,242,239,.72);max-width:440px;justify-self:end}
+.g-lede b{font-weight:400;color:#f4f2ef}
+
+.chips{
+  position:sticky;top:calc(var(--chips-top) - var(--gpt));z-index:3;isolation:isolate;
+  display:flex;gap:8px;flex-wrap:wrap;
+  padding:14px 0 18px;margin-bottom:clamp(10px,2vw,22px);
+}
+.chips::before{content:"";position:absolute;z-index:-1;left:-50vw;right:-50vw;top:0;bottom:0;background:linear-gradient(#000 calc(100% - 22px), rgba(0,0,0,0));pointer-events:none;opacity:0;transition:opacity .25s}
+body.gstuck .chips::before{opacity:1}
+.g-band{position:fixed;left:0;right:0;top:0;height:var(--chips-top);background:#000;z-index:21;pointer-events:none;opacity:0;transition:opacity .25s}
+body.gridview.gstuck .g-band{opacity:1}
+.chip{
+  display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:9px 16px;
+  border:1px solid rgba(244,242,239,.22);border-radius:999px;
+  font-size:12.5px;letter-spacing:.02em;color:rgba(244,242,239,.78);
+  transition:background .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease);
+}
+.chip span{font-size:11px;color:rgba(244,242,239,.45);transition:color .3s var(--ease)}
+.chip:hover{border-color:rgba(244,242,239,.6);color:#fff}
+.chip.on{background:#f4f2ef;border-color:#f4f2ef;color:#0a0a0a}
+.chip.on span{color:rgba(10,10,10,.55)}
+
+.g-sec{padding-top:clamp(10px,1.6vw,20px);margin-bottom:clamp(48px,7vw,104px)}
+.g-sec[hidden]{display:none}
+.g-sec-h{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:6px clamp(14px,2vw,28px);
+  padding-bottom:16px;margin-bottom:clamp(16px,2vw,26px);border-bottom:1px solid rgba(244,242,239,.16);
+}
+.g-no{font-size:11px;letter-spacing:.2em;color:rgba(244,242,239,.45);padding-bottom:8px}
+.g-sec-h h3{font-family:var(--serif);font-weight:400;font-size:clamp(28px, 3.4vw, 48px);line-height:1;letter-spacing:-.01em}
+.g-sec-h p{grid-column:1;font-size:13px;line-height:1.55;color:rgba(244,242,239,.62);max-width:520px}
+.g-ct{grid-column:2;grid-row:1 / span 2;align-self:end;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(244,242,239,.5);white-space:nowrap;padding-bottom:4px}
+.g-cols{column-count:4;column-gap:clamp(10px, 1.2vw, 16px)}
+.g-cols figure{
+  position:relative;break-inside:avoid;margin:0 0 clamp(10px, 1.2vw, 16px);
+  border-radius:3px;overflow:hidden;background:#0b0b0b;cursor:pointer;
+  aspect-ratio:var(--ar);
+}
+.g-cols img{width:100%;height:100%;object-fit:cover;opacity:0;transition:transform .8s var(--ease), opacity .7s var(--ease)}
+.g-cols img.in{opacity:.86}
+.g-cols figure:hover img{transform:scale(1.04);opacity:1}
+.g-cols figcaption{
+  position:absolute;left:0;right:0;bottom:0;
+  font-family:var(--serif);font-weight:400;font-size:15px;line-height:1.25;color:var(--ink);
+  background:linear-gradient(to bottom, transparent, rgba(0,0,0,.82));
+  padding:30px 14px 12px;
+  opacity:0;transform:translateY(6px);
+  transition:opacity .5s var(--ease), transform .5s var(--ease);
+  pointer-events:none;
+}
+.g-cols figcaption small{display:block;font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:rgba(244,242,239,.6);margin-top:5px}
+.g-cols figure:hover figcaption{opacity:1;transform:none}
+.g-end{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center;border-top:1px solid rgba(244,242,239,.16);padding-top:22px;font-size:13px;color:rgba(244,242,239,.62)}
+.g-end a{color:#f4f2ef;text-decoration:none;border:1px solid rgba(244,242,239,.4);border-radius:999px;padding:11px 20px;min-height:44px;display:inline-flex;align-items:center;transition:background .3s var(--ease), color .3s var(--ease)}
+.g-end a:hover{background:#f4f2ef;color:#0a0a0a}
+
+/* ---------- chrome ---------- */
+.chrome{opacity:0;transition:opacity 1.2s var(--ease) .15s, transform .6s var(--ease)}
+body.revealed .chrome{opacity:1}
+
+header.chrome{
+  position:fixed;top:0;left:0;width:100%;z-index:60;
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding:calc(var(--pad) * .8 + var(--safe-top)) calc(var(--pad) + var(--safe-right)) calc(var(--pad) * .35) calc(var(--pad) + var(--safe-left));
+  mix-blend-mode:difference;
+  pointer-events:none;
+}
+header > *{pointer-events:auto}
+.wordmark{
+  display:block;height:clamp(34px, 3.4vw, 46px);
+  color:#fff;text-decoration:none;
+  transition:color .4s var(--ease);
+}
+.menu-btn{
+  display:flex;flex-direction:column;align-items:flex-end;gap:5px;
+  min-width:44px;min-height:44px;padding:8px 0 4px;
+}
+.menu-label{font-size:clamp(12px, 1.25vw, 15px);letter-spacing:.01em;color:#fff;font-weight:400;transition:opacity .35s var(--ease)}
+.bars{position:relative;display:block;width:clamp(42px, 4.4vw, 62px);height:clamp(16px, 2vw, 22px)}
+.bars i{
+  position:absolute;left:0;right:0;top:50%;height:1px;background:#fff;
+  transition:transform .55s var(--ease), width .55s var(--ease), background .4s var(--ease);
+}
+.bars i:first-child{transform:translateY(-5px)}
+.bars i:last-child{left:auto;right:0;width:clamp(34px, 3.6vw, 50px);transform:translateY(5px)}
+.menu-btn:hover .bars i:last-child{transform:translateY(5px) translateX(-8px)}
+body.menuopen header.chrome{z-index:90;mix-blend-mode:normal}
+body.menuopen .wordmark{color:#f4f2ef}
+body.menuopen .menu-label{opacity:0}
+body.menuopen .bars i{width:100%;background:#f4f2ef}
+body.menuopen .bars i:first-child{transform:translateY(0) rotate(45deg)}
+body.menuopen .bars i:last-child,
+body.menuopen .menu-btn:hover .bars i:last-child{transform:translateY(0) rotate(-45deg)}
+
+.bio{
+  position:fixed;left:calc(var(--pad) + var(--safe-left));bottom:calc(var(--pad) + var(--safe-bottom));
+  z-index:55;max-width:min(320px, 46vw);
+}
+.bio .who{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+#avatar{width:52px;height:52px;border-radius:3px;object-fit:cover;background:#f4f2ef}
+.bio b{font-family:var(--serif);font-weight:400;font-size:19px;letter-spacing:.01em}
+.bio p{font-size:12.5px;line-height:1.62;color:rgba(244,242,239,.72)}
+body.deep .bio, body.gridview .bio, body.lit .bio{opacity:0;transform:translateY(10px);pointer-events:none;transition-delay:0s}
+
+.colophon{
+  position:fixed;right:calc(var(--pad) + var(--safe-right));bottom:calc(var(--pad) + var(--safe-bottom));
+  z-index:55;font-size:12.5px;color:rgba(244,242,239,.72);
+}
+body.gridview .colophon, body.lit .colophon{opacity:0;transition-delay:0s}
+
+.gridbtn{
+  position:fixed;left:calc(var(--pad) + var(--safe-left));bottom:calc(var(--pad) + var(--safe-bottom));
+  z-index:56;width:44px;height:44px;padding:5px;
+  display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:4px;
+  opacity:0;transform:translateY(8px);pointer-events:none;
+  transition:opacity .6s var(--ease), transform .6s var(--ease);
+}
+.gridbtn b{background:#f4f2ef;border-radius:2px;transition:transform .45s var(--ease), background .3s var(--ease)}
+body.revealed.deep .gridbtn, body.revealed.gridview .gridbtn{opacity:1;transform:none;pointer-events:auto}
+.gridbtn:hover b{background:#fff;transform:scale(.86)}
+body.gridview .gridbtn b:nth-child(1){transform:translate(3px,3px)}
+body.gridview .gridbtn b:nth-child(4){transform:translate(-3px,-3px)}
+
+.cue{
+  position:fixed;left:50%;bottom:calc(var(--pad) + var(--safe-bottom) + 4px);
+  transform:translateX(-50%);z-index:54;
+  display:flex;align-items:center;gap:10px;
+  font-size:10px;text-transform:uppercase;letter-spacing:.24em;color:rgba(244,242,239,.42);
+  white-space:nowrap;pointer-events:none;
+}
+.cue s{position:relative;display:block;width:44px;height:1px;background:rgba(244,242,239,.28);overflow:hidden}
+.cue s::after{content:"";position:absolute;inset:0;background:#f4f2ef;transform:translateX(-100%);animation:sweep 2.6s var(--ease) infinite}
+@keyframes sweep{0%{transform:translateX(-100%)}55%{transform:translateX(0)}100%{transform:translateX(100%)}}
+body.deep .cue, body.gridview .cue, body.lit .cue{opacity:0;transition-delay:0s}
+
+/* ---------- menu ---------- */
+#menu{
+  position:fixed;inset:0;z-index:80;background:#050505;
+  display:grid;place-items:center;
+  clip-path:inset(0 0 100% 0);pointer-events:none;
+  transition:clip-path .85s var(--ease);
+}
+body.menuopen #menu{clip-path:inset(0);pointer-events:auto}
+#menu nav{display:flex;flex-direction:column;gap:clamp(2px, .8vw, 8px);text-align:center}
+#menu nav a{
+  font-family:var(--serif);font-weight:400;
+  font-size:clamp(30px, 6.2vw, 68px);line-height:1.08;
+  color:#f4f2ef;text-decoration:none;opacity:.55;
+  transition:opacity .45s var(--ease), letter-spacing .45s var(--ease);
+}
+#menu nav a:hover,#menu nav a:focus-visible{opacity:1;letter-spacing:.012em}
+#menu .addr a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(140,135,131,.4)}
+#menu .addr a:hover{color:#f4f2ef}
+#menu .addr{
+  position:absolute;left:calc(var(--pad) + var(--safe-left));right:calc(var(--pad) + var(--safe-right));bottom:calc(var(--pad) + var(--safe-bottom));
+  font-size:12.5px;color:var(--dim);line-height:1.7;
+}
+
+/* ---------- lightbox ---------- */
+#lit{
+  position:fixed;inset:0;z-index:90;
+  display:grid;place-items:center;
+  padding:clamp(56px, 8vh, 84px) var(--pad);
+  opacity:0;pointer-events:none;
+  transition:opacity .42s ease;
+}
+body.lit #lit{opacity:1;pointer-events:auto}
+body.lit.gridview #lit{background:rgba(0,0,0,.9)}
+#lit .scrim{position:absolute;inset:0}
+.plate{
+  --ar:1.5;
+  position:relative;z-index:1;
+  width:min(72vw, 860px, (100vh - 230px) * var(--ar));
+  transition:transform .62s var(--ease), opacity .42s ease;
+}
+.shot{position:relative;width:100%;aspect-ratio:var(--ar);border-radius:2px;background:#0b0b0b;box-shadow:0 30px 90px rgba(0,0,0,.75)}
+.shot img{width:100%;height:100%;object-fit:cover;border-radius:2px;transition:opacity .25s ease}
+.shot img.swap{opacity:0}
+.shot .close{
+  position:absolute;top:12px;right:14px;z-index:2;
+  font-size:12.5px;min-width:44px;min-height:44px;padding:10px 14px;
+  border:1px solid rgba(244,242,239,.78);border-radius:6px;
+  background:rgba(0,0,0,.35);color:#f4f2ef;
+  transition:border-color .3s var(--ease), background .3s var(--ease);
+}
+.shot .close:hover{border-color:#fff;background:rgba(0,0,0,.55)}
+.lnav{
+  position:absolute;top:50%;z-index:2;width:44px;height:44px;margin-top:-22px;border-radius:50%;
+  border:1px solid rgba(244,242,239,.6);background:rgba(0,0,0,.35);color:#f4f2ef;
+  display:grid;place-items:center;transition:background .3s var(--ease), border-color .3s var(--ease);
+}
+.lnav:hover{background:rgba(0,0,0,.6);border-color:#fff}
+.lnav svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.4}
+.lnav.prev{left:12px}
+.lnav.next{right:12px}
+.meta{display:grid;grid-template-columns:minmax(0,.78fr) minmax(0,1.22fr);gap:clamp(22px, 3.2vw, 48px);padding-top:16px}
+#litTitle{font-family:var(--serif);font-weight:400;font-size:clamp(22px, 2.15vw, 32px);line-height:1.08;letter-spacing:-.01em;margin-bottom:6px}
+.where{font-size:13px;color:rgba(244,242,239,.62)}
+.where em{font-style:normal;margin-left:10px;color:rgba(244,242,239,.4);font-size:12px;letter-spacing:.06em}
+.note{font-size:13.5px;line-height:1.55;color:rgba(244,242,239,.92);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}
+
+/* ---------- intro ---------- */
+#intro{position:fixed;inset:0;z-index:200;background:#000;display:grid;place-items:center;overflow:hidden}
+#filmBg{position:absolute;inset:-6%;width:112%;height:112%;object-fit:cover;filter:blur(38px) brightness(.38) saturate(1.1);transform:scale(1.04)}
+#film{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:50% 50%}
+#intro .fallback{position:absolute;inset:0;background:radial-gradient(circle at 50% 46%, #2a1f12 0%, #0c0906 42%, #000 72%);opacity:0;transition:opacity 1s ease}
+#intro.novideo .fallback{opacity:1}
+#intro .veil{position:absolute;inset:0;background:#000;opacity:0;transition:opacity 1.15s ease;pointer-events:none}
+#intro.closing .veil{opacity:1}
+#intro.gone{opacity:0;pointer-events:none;transition:opacity .5s linear}
+.skip{
+  position:absolute;right:calc(var(--pad) + var(--safe-right));bottom:calc(var(--pad) + var(--safe-bottom));
+  font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(244,242,239,.6);
+  min-height:44px;padding:10px 18px;
+  border:1px solid rgba(244,242,239,.25);border-radius:999px;
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  transition:color .3s ease, border-color .3s ease, opacity .4s ease;
+}
+.skip:hover{color:#fff;border-color:rgba(255,255,255,.7)}
+#intro.closing .skip{opacity:0;pointer-events:none}
+
+/* ---------- responsive ---------- */
+@media (max-width:1400px){.g-cols{column-count:4}}
+@media (min-width:1401px){.g-cols{column-count:5}}
+@media (max-width:1100px){.g-cols{column-count:3}}
+@media (max-width:900px){
+  .bio{max-width:min(420px, calc(100vw - var(--pad) * 2 - var(--safe-left) - var(--safe-right)))}
+  .bio p{font-size:12px}
+  .colophon{font-size:11px}
+  .meta{grid-template-columns:1fr;gap:10px;padding-top:14px}
+  .plate{width:min(92vw, (100dvh - 220px) * var(--ar))}
+  :root{--gpt:calc(var(--pad) * .8 + 74px + var(--safe-top))}
+  .g-intro{grid-template-columns:1fr;align-items:start}
+  .g-lede{justify-self:start}
+}
+@media (max-width:768px){
+  .colophon{display:none}
+  .bio{max-width:calc(100vw - var(--pad) * 2 - var(--safe-left) - var(--safe-right))}
+  #headline{font-size:clamp(22px, 6.4vw, 34px)}
+  #menu nav a{font-size:clamp(28px, 8vw, 50px)}
+  #menu .addr{font-size:11.5px}
+  .g-cols{column-count:2}
+  .g-sec-h{grid-template-columns:minmax(0,1fr)}
+  .g-ct{grid-column:1 / -1;grid-row:auto;padding:0}
+  .g-sec-h p{grid-column:1 / -1}
+  .chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-left:calc(-1 * (var(--pad) + var(--safe-left)));margin-right:calc(-1 * (var(--pad) + var(--safe-right)));padding-left:calc(var(--pad) + var(--safe-left));padding-right:calc(var(--pad) + var(--safe-right))}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:none}
+}
+@media (max-width:640px){
+  :root{--hw:min(84vw, 360px);--pad:clamp(12px, 4vw, 18px)}
+  #avatar{width:42px;height:42px}
+  .bio b{font-size:17px}
+  .bio p{font-size:11.5px;line-height:1.55}
+  .cue{display:none}
+  #lit{
+    display:block;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+    padding:calc(52px + var(--safe-top)) calc(var(--pad) + var(--safe-right)) calc(var(--pad) + var(--safe-bottom)) calc(var(--pad) + var(--safe-left));
+  }
+  .plate{width:100%;max-width:min(560px, (100dvh - 190px) * var(--ar));margin:0 auto}
+  #litTitle{font-size:clamp(20px, 5.6vw, 26px)}
+  .note{font-size:12.5px;line-height:1.58;-webkit-line-clamp:unset;display:block}
+  .shot .close{top:8px;right:8px}
+  .lnav{width:40px;height:40px;margin-top:-20px}
+  .lnav.prev{left:8px}.lnav.next{right:8px}
+  .g-cols{column-gap:8px}
+  .g-cols figure{margin-bottom:8px}
+  .g-intro h2{font-size:clamp(30px, 9vw, 44px)}
+}
+@media (max-width:380px){
+  :root{--hw:min(88vw, 320px)}
+  .bio .who{gap:10px;margin-bottom:10px}
+  .bio p{display:none}
+  #menu nav{gap:2px}
+  #menu nav a{font-size:clamp(24px, 9vw, 36px)}
+}
+@media (max-height:520px) and (orientation:landscape){
+  .bio,.colophon,.cue{display:none}
+  #headline{font-size:clamp(18px, 4.8vh, 28px)}
+  #lit{padding-top:calc(36px + var(--safe-top))}
+  .meta{padding-top:10px}
+  .plate{width:min(58vw, (100dvh - 80px) * var(--ar))}
+  header.chrome{padding-top:calc(8px + var(--safe-top))}
+  #menu nav a{font-size:clamp(22px, 7vh, 34px)}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.14s !important}
+}
+</style>
+</head>
+<body class="locked">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="omp-logo" viewBox="0 0 1288.000000 420.000000"><g transform="translate(0.000000,420.000000) scale(0.100000,-0.100000)" fill="currentColor"><path d="M1764 3765 c-33 -7 -98 -29 -145 -48 -46 -19 -109 -42 -139 -52 -204 -66 -528 -325 -765 -612 -60 -73 -163 -273 -242 -473 -58 -145 -58 -145 -58 -335 1 -173 3 -199 28 -295 32 -125 33 -167 6 -240 -47 -128 -61 -181 -74 -280 -50 -364 38 -536 312 -611 89 -25 276 -22 405 5 76 17 286 122 388 196 36 26 89 63 119 83 182 121 595 574 681 747 18 36 47 86 66 112 46 65 180 346 205 432 12 39 38 112 60 161 49 116 59 178 66 410 7 233 -1 272 -89 428 -91 159 -147 211 -323 298 -182 90 -329 112 -501 74z m297 -179 c20 -7 51 -24 70 -38 19 -14 61 -39 94 -56 81 -41 105 -68 167 -197 53 -109 53 -109 53 -295 0 -185 0 -185 -48 -360 -69 -250 -75 -268 -117 -340 -21 -36 -51 -96 -66 -135 -15 -38 -37 -84 -48 -101 -12 -17 -51 -75 -87 -130 -79 -118 -153 -191 -277 -272 -143 -94 -162 -99 -487 -129 -159 -14 -326 32 -448 123 -129 97 -156 174 -94 276 66 110 125 199 162 243 23 28 62 82 87 120 57 89 193 251 272 324 166 154 213 234 167 280 -57 57 -151 9 -329 -164 -126 -122 -176 -183 -300 -363 -140 -205 -260 -165 -178 58 92 249 102 269 209 437 145 228 343 417 604 579 161 99 491 177 594 140z m-1268 -2127 c84 -61 103 -68 282 -104 131 -27 146 -28 237 -18 161 18 191 -7 125 -103 -31 -45 -48 -56 -198 -132 -302 -154 -491 -168 -599 -46 -73 83 -85 370 -19 437 41 41 81 33 172 -34z M6745 3506 c-27 -12 -61 -39 -245 -194 -51 -43 -168 -178 -382 -440 -91 -111 -317 -426 -426 -593 -20 -31 -55 -83 -76 -115 -155 -233 -288 -445 -335 -536 -16 -31 -47 -80 -69 -110 -22 -29 -54 -82 -72 -118 -18 -36 -47 -90 -66 -121 -18 -31 -48 -89 -65 -130 -17 -41 -47 -100 -66 -132 -37 -61 -137 -294 -155 -360 -24 -88 34 -161 108 -137 73 25 129 104 177 257 15 44 68 159 118 255 51 95 121 229 155 297 35 68 70 131 77 140 8 9 34 50 57 91 24 41 62 100 85 130 23 30 52 75 65 100 36 71 178 289 235 360 29 36 112 153 185 260 73 107 158 224 188 259 31 35 81 99 112 142 87 123 256 323 285 339 85 46 83 -85 -5 -259 -21 -42 -52 -118 -69 -169 -17 -51 -49 -125 -70 -165 -22 -40 -58 -116 -80 -169 -23 -54 -62 -135 -88 -182 -75 -133 -123 -221 -194 -356 -36 -69 -116 -222 -179 -340 -63 -118 -124 -240 -137 -270 -68 -166 19 -284 152 -206 43 26 89 98 115 181 13 42 109 229 167 327 18 31 53 102 78 159 24 56 60 126 79 154 19 29 56 95 81 146 26 52 83 146 128 209 223 320 275 390 331 450 34 36 90 103 125 149 133 172 264 250 248 148 -7 -48 -109 -322 -149 -402 -19 -38 -43 -95 -53 -125 -9 -30 -39 -95 -65 -145 -52 -98 -141 -311 -197 -469 -19 -55 -57 -145 -85 -200 -35 -68 -62 -142 -84 -229 -18 -70 -51 -168 -74 -217 -29 -66 -44 -117 -55 -192 -9 -57 -25 -133 -35 -169 -44 -147 -9 -268 86 -299 72 -24 179 52 255 182 22 37 58 89 81 115 23 26 57 73 76 103 20 30 55 79 79 109 24 30 56 75 70 100 44 75 174 273 208 316 18 22 56 78 85 125 170 271 172 276 111 317 -71 48 -117 27 -190 -85 -28 -43 -87 -126 -130 -187 -44 -60 -124 -180 -177 -265 -128 -204 -163 -240 -199 -210 -34 29 11 212 90 370 18 36 46 104 63 152 17 47 44 113 61 145 16 33 46 106 66 164 20 57 52 132 71 167 19 35 52 116 75 180 22 64 58 148 80 187 23 38 53 108 69 155 15 47 45 121 67 165 71 141 96 304 63 423 -28 104 -125 149 -225 103 -38 -17 -200 -146 -239 -189 -10 -12 -47 -40 -83 -63 -89 -58 -96 -49 -60 85 47 180 30 273 -58 323 -46 26 -122 30 -170 9z M11483 2388 c-41 -30 -169 -177 -220 -254 -48 -70 -138 -156 -195 -185 -77 -39 -109 -1 -118 137 -7 105 -21 135 -81 168 -51 28 -107 16 -208 -44 -48 -28 -111 -55 -150 -65 -36 -9 -102 -36 -146 -60 -154 -86 -203 -107 -265 -112 -72 -7 -73 -4 -29 87 102 211 -39 299 -242 151 -38 -28 -106 -69 -152 -92 -45 -23 -100 -56 -122 -74 -102 -82 -180 -71 -205 28 -27 110 -64 151 -175 193 -119 45 -212 18 -344 -101 -88 -79 -118 -90 -240 -82 -159 11 -210 29 -298 109 -108 97 -173 102 -301 21 -74 -47 -150 -120 -174 -168 -12 -22 -54 -73 -94 -113 -87 -87 -89 -96 -35 -180 93 -144 237 -152 401 -22 67 53 202 120 243 120 33 0 41 -6 82 -58 97 -124 178 -131 298 -25 149 131 283 135 412 13 75 -72 91 -80 155 -80 51 0 103 20 163 62 70 49 125 44 226 -20 129 -82 239 -84 366 -5 85 54 130 53 209 -4 110 -79 186 -55 295 94 126 173 210 181 198 20 -8 -98 8 -140 63 -169 69 -36 159 -18 230 46 66 60 112 56 219 -16 84 -56 141 -62 247 -23 88 32 130 30 191 -8 128 -81 170 -66 384 130 94 87 131 115 163 123 95 23 118 32 137 51 43 43 10 85 -81 100 -85 14 -100 31 -100 113 0 112 -41 131 -156 75 -46 -23 -85 -54 -138 -111 -57 -61 -89 -85 -139 -108 -36 -16 -94 -48 -129 -70 -145 -94 -189 7 -49 113 71 54 83 77 78 148 -11 134 -94 204 -174 147z M3994 2300 c-22 -9 -63 -55 -106 -118 -21 -32 -40 -45 -98 -67 -39 -15 -92 -43 -117 -62 -137 -105 -203 -99 -233 21 -26 99 -59 138 -155 183 -121 56 -249 27 -334 -75 -52 -63 -106 -91 -205 -107 -127 -21 -188 -64 -215 -154 -62 -210 109 -300 284 -150 83 72 123 89 218 89 95 0 125 -12 202 -80 33 -28 88 -65 121 -81 112 -53 109 -92 -16 -269 -48 -68 -92 -144 -112 -193 -18 -45 -48 -109 -66 -142 -93 -171 -110 -250 -67 -322 62 -104 190 -45 289 134 27 48 64 111 81 138 35 54 138 234 218 380 102 187 152 241 249 270 189 56 439 268 449 380 8 103 -23 138 -166 194 -104 41 -173 51 -221 31z"/></g></symbol>
+</svg>
+
+<div id="scrolltrack" aria-hidden="true"></div>
+
+<div id="stage">
+  <div id="world">
+    <div id="orb"></div>
+    <h1 id="headline"><span class="inner"><span style="--i:0">Capturing</span> <span style="--i:1">Unseen</span> <span style="--i:2">Moments</span></span></h1>
+  </div>
+</div>
+
+<div class="vig" aria-hidden="true"></div>
+
+<div id="grid" aria-label="The Archive">
+  <div class="g-wrap">
+    <div class="g-intro">
+      <div>
+        <p class="g-kicker">The Archive</p>
+        <h2>Every moment,<br>beautifully kept.</h2>
+      </div>
+      <p class="g-lede"><b id="gTotal"></b> frames from weddings, love stories, portraits and celebrations across Lagos — photographed by OMP Moments. Tap any frame to see it in full.</p>
+    </div>
+    <nav class="chips" id="chips" aria-label="Filter the archive"></nav>
+    <div id="secs"></div>
+    <div class="g-end">
+      <span>Planning a wedding or an event? Let’s capture it.</span>
+      <a href="https://wa.me/2348142096144" target="_blank" rel="noopener">Book a date on WhatsApp</a>
+    </div>
+  </div>
+</div>
+
+<div class="g-band" aria-hidden="true"></div>
+
+<header class="chrome">
+  <a class="wordmark" href="#" aria-label="OMP Moments"><svg class="logo" viewBox="0 0 1288.000000 420.000000" aria-hidden="true"><use href="#omp-logo"/></svg></a>
+  <button id="menuBtn" class="menu-btn" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
+    <span class="menu-label">Menu</span>
+    <span class="bars" aria-hidden="true"><i></i><i></i></span>
+  </button>
+</header>
+
+<aside class="bio chrome">
+  <div class="who"><img id="avatar" src="assets/avatar.jpg" alt="OMP Moments logo" width="52" height="52"><b>OMP Moments</b></div>
+  <p>A professional photographer, built to capture unseen but amazing moments at your weddings, corporate events and portraits. Photography &amp; videography from Lagos.</p>
+</aside>
+
+<div class="colophon chrome">Top Lagos Event Photographer</div>
+
+<button id="gridBtn" class="gridbtn" type="button" aria-label="Toggle grid view"><b></b><b></b><b></b><b></b></button>
+
+<div class="cue chrome" aria-hidden="true"><s></s><span>Drag to rotate</span></div>
+
+<div id="menu" aria-hidden="true" inert>
+  <nav aria-label="Primary">
+    <a href="#" data-grid="all">The Archive</a>
+    <a href="#" data-grid="weddings">Weddings</a>
+    <a href="#" data-grid="couples">Love Stories</a>
+    <a href="#" data-grid="portraits">Portraits</a>
+    <a href="#" data-grid="celebrations">Celebrations</a>
+    <a href="https://wa.me/2348142096144" target="_blank" rel="noopener">Book a Date</a>
+  </nav>
+  <div class="addr">Lagos, Nigeria · Photography &amp; Videography<br><a href="https://wa.me/2348142096144" target="_blank" rel="noopener">WhatsApp +234 814 209 6144</a> · <a href="https://www.instagram.com/omp_moments/" target="_blank" rel="noopener">@omp_moments</a></div>
+</div>
+
+<div id="lit" role="dialog" aria-modal="true" aria-labelledby="litTitle" aria-hidden="true">
+  <div class="scrim"></div>
+  <div class="plate">
+    <div class="shot">
+      <img id="litImg" alt="">
+      <button class="close" type="button" data-close>Close</button>
+      <button class="lnav prev" type="button" aria-label="Previous photo"><svg viewBox="0 0 16 16"><path d="M10.5 2.5 5 8l5.5 5.5"/></svg></button>
+      <button class="lnav next" type="button" aria-label="Next photo"><svg viewBox="0 0 16 16"><path d="M5.5 2.5 11 8l-5.5 5.5"/></svg></button>
+    </div>
+    <div class="meta">
+      <div>
+        <h2 id="litTitle"></h2>
+        <div class="where"><span id="litWhere"></span><em id="litCount"></em></div>
+      </div>
+      <p class="note" id="litNote"></p>
+    </div>
+  </div>
+</div>
+
+<div id="intro">
+  <video id="filmBg" src="assets/intro.mp4" muted playsinline webkit-playsinline preload="auto" disablepictureinpicture aria-hidden="true" tabindex="-1"></video>
+  <video id="film" src="assets/intro.mp4" muted playsinline webkit-playsinline autoplay preload="auto" disablepictureinpicture></video>
+  <div class="fallback"></div>
+  <div class="veil"></div>
+  <button class="skip" id="skip" type="button">Skip</button>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const IMG = 'assets/p/';
+  const ARCHIVE = [{"k":"Db2iNCMjD00","c":"weddings","t":"Wedding deserves to be properly documented, we don’t just…","p":"Wedding · Lagos","n":"Wedding deserves to be properly documented, we don’t just document we create timeliness visuals (","w":972,"h":1296},{"k":"Ddby-EKjBn8","c":"weddings","t":"Two hearts","p":"Wedding · Lagos","n":"One beautiful beginning. Every detail, captured to last a lifetime. Experience OMP Moments today","w":4016,"h":4016},{"k":"DdbyW5eDEW8","c":"weddings","t":"Love, laughter, and timeless moments beautifully captured","p":"Wedding · Lagos","n":"Your story deserves to be remembered this way. Experience today","w":4016,"h":4016},{"k":"Ddbg9VnDh9D","c":"couples","t":"Love was in the air, happiness filled the room, And forever…","p":"Love Story · Lagos","n":"Love was in the air, happiness filled the room, And forever officially began A beautiful celebration for a beautiful love story","w":4016,"h":4016},{"k":"DdbeUhkDtgg","c":"weddings","t":"There's something so magical about witnessing a lovevstory come…","p":"Wedding · Lagos","n":"There's something so magical about witnessing a lovevstory come to life My your love continues to grow deepen and bloom beautifully","w":4016,"h":4016},{"k":"DdbcJ8MDiCB","c":"weddings","t":"A LOVE FAIRYTALE","p":"Wedding · Lagos","n":"A love story with love pact","w":3882,"h":3882},{"k":"DdbFuHeji1O","c":"weddings","t":"Love design curated in heaven","p":"Wedding · Lagos","n":"Divine Essence","w":4016,"h":4016},{"k":"DdbDUe1DquA","c":"weddings","t":"The special glow a bride radiates on her wedding day captured…","p":"Wedding · Lagos","n":"The special glow a bride radiates on her wedding day captured in timeless frames","w":4016,"h":4016},{"k":"DdZT0cjjHII","c":"details","t":"A collection of freezed in time","p":"Details · Lagos","n":"The small things that make the day — shoes, rings, beads and finishing touches.","w":3559,"h":3559},{"k":"DdZQdEYDAcD","c":"couples","t":"Before the big \"I do\" there is just this magic","p":"Love Story · Lagos","n":"Two hearts, one frame — a love story captured in timeless frames.","w":4016,"h":4016},{"k":"DdZPMrDDKPC","c":"couples","t":"A seed planted before a flower blooms","p":"Love Story · Lagos","n":"Every love story has a beginning","w":4016,"h":4016},{"k":"DdZOa3RjNY4","c":"couples","t":"A beautiful journey of captured in timeless frames","p":"Love Story · Lagos","n":"Two hearts, one frame — a love story captured in timeless frames.","w":3212,"h":3212},{"k":"Dax-jmXjE3p","c":"celebrations","t":"Mr Olumide’s 50th birthday was celebrated with family and…","p":"Celebration · Lagos","n":"Mr Olumide’s 50th birthday was celebrated with family and friends who took their time to plan this beautiful surprise party for him. And Ompmoments was there to capture the heartwarming event","w":1633,"h":1091},{"k":"Daxw5CojNi1","c":"celebrations","t":"His happiness was contagious","p":"Celebration · Lagos","n":"Family, friends and a milestone worth remembering.","w":1633,"h":1091},{"k":"DaxqAnMDATl","c":"portraits","t":"A surprise party organized by family and friends","p":"Portrait · Lagos","n":"It was such a heartwarming event","w":1634,"h":2178},{"k":"DaxcRj9jMWG","c":"celebrations","t":"Mr Olumide 50th Birthday was a surprise party","p":"Celebration · Lagos","n":"Family, friends and a milestone worth remembering.","w":1633,"h":1091},{"k":"DaihybKjBJ7","c":"couples","t":"Their love almost blinded me, no flash needed","p":"Love Story · Lagos","n":"Two hearts, one frame — a love story captured in timeless frames.","w":3277,"h":4096},{"k":"DaiQdibjAo-","c":"couples","t":"Capturing this love story was a bliss","p":"Love Story · Lagos","n":"Two hearts, one frame — a love story captured in timeless frames.","w":3277,"h":4096},{"k":"DaiMteKDPzZ","c":"couples","t":"A beautiful love story defined with silent smiles, secret…","p":"Love Story · Lagos","n":"A beautiful love story defined with silent smiles, secret glances and the quiet moments that assured forever, captured in this beautiful frame","w":3276,"h":4096},{"k":"DYPWmh8jBsD","c":"couples","t":"Two hearts, One frame","p":"Love Story · Lagos","n":"This is not just a love story..... It's a lifetime in the making","w":1080,"h":1350},{"k":"DYPGlWNjC_8","c":"couples","t":"A beautiful beginning captured in timeless frames","p":"Love Story · Lagos","n":"Two hearts, one frame — a love story captured in timeless frames.","w":1080,"h":1350},{"k":"DYE9-09jL3D","c":"couples","t":"Before the vows, before the aisle — just love in its purest form","p":"Love Story · Lagos","n":"Two hearts, one frame — a love story captured in timeless frames.","w":1080,"h":1350},{"k":"DU6Cdk6DOz-","c":"celebrations","t":"Grateful for every guest","p":"Celebration · Lagos","n":"Grateful for every smile. Grateful for every moment shared. Mr. Ks @ 60 was truly a celebration of love and unity. MrKsAt60","w":1440,"h":1939},{"k":"DU5bDP0jOfw","c":"celebrations","t":"A milestone becomes unforgettable when surrounded by the right…","p":"Celebration · Lagos","n":"A milestone becomes unforgettable when surrounded by the right people. From close family to cherished friends, every smile in the room added warmth to Mr. KS 60th celebration. Thank you for showing up, showing love, and making memories together. OwambeVibes","w":1440,"h":1939},{"k":"DU5JsGLDCoV","c":"celebrations","t":"Mr. Ks @ 60 A Legacy of Grace and Greatness","p":"Celebration · Lagos","n":"Today, we celebrate not just a birthday but a remarkable journey. Sixty years of wisdom. Sixty years of impact. Sixty years of grace. Mr. Ks has lived a life defined by strength, leadership, love, and undeniable excellence. From humble beginnings to admirable…","w":2157,"h":1440},{"k":"DU3dkJFjGsn","c":"celebrations","t":"Distinguished guests","p":"Celebration · Lagos","n":"Beautiful moments. An atmosphere filled with joy and elegance. Mr. KS 60th was elevated by the presence of family and friends who came out in style to celebrate greatness","w":1440,"h":1939},{"k":"DU3HMGvjBBP","c":"celebrations","t":"It wasn’t just a celebration","p":"Celebration · Lagos","n":"it was a gathering of love. Friends, family, and well-wishers came out in grand style to honor Mr. K at 60. Your presence, prayers, and heartfelt wishes made the day even more special. Thank you for celebrating a life so beautifully lived","w":1440,"h":1939},{"k":"DU2rXeljJMD","c":"portraits","t":"A milestone becomes unforgettable when surrounded by the right…","p":"Portrait · Lagos","n":"A milestone becomes unforgettable when surrounded by the right people. From close family to cherished friends, every smile in the room added warmth to Mr. Ks 60th celebration. Thank you for showing up, showing love, and making memories together. MrKsAt60","w":1440,"h":1939},{"k":"DU01xwoDHli","c":"celebrations","t":"Today we celebrate a man whose presence commands respect and…","p":"Celebration · Lagos","n":"Today we celebrate a man whose presence commands respect and whose life tells a story of strength, honor, and excellence. Mr. Ks at 60 is not just a birthday it’s a celebration of impact, leadership, and grace. May this new decade bring even greater…","w":2157,"h":1440},{"k":"DU0ptARjHMV","c":"portraits","t":"Six decades of excellence","p":"Portrait · Lagos","n":"Six decades of leadership. Six decades of God’s faithfulness. Mr. K’s 60th birthday was nothing short of grand — filled with laughter, heartfelt tributes, and unforgettable moments. Here’s to more life, more blessings, and many more milestones ahead. 60 looks…","w":1440,"h":1939},{"k":"DU0lRxCjFCy","c":"celebrations","t":"His Happiness was contagious","p":"Celebration · Lagos","n":"We had a blast Competition","w":2157,"h":1440},{"k":"DU0jKYMjMWQ","c":"celebrations","t":"Mr. KS","p":"Celebration · Lagos","n":"Diamond jubilee celebration of legacies, love life, and eternity Happy Diamond Jubilee, Mr. Ks","w":2157,"h":1440},{"k":"DU0hvQVjFw5","c":"celebrations","t":"We welcome you to Mr. KS Diamond Jubilee","p":"Celebration · Lagos","n":"Was celebrated with family and friends","w":2157,"h":1440},{"k":"DUs2YBODNek","c":"celebrations","t":"Mrs. Tobi","p":"Celebration · Lagos","n":"The birthday woman really enjoyed herself.... We wish you everything Good","w":2157,"h":1440},{"k":"DUsv09IjHox","c":"celebrations","t":"MRS TOBI GOLDEN JUBILBEE","p":"Celebration · Lagos","n":"It was celebrated in a magnificent way family, friends gather to celebrate Mrs. Tobi and her family","w":2157,"h":1440},{"k":"DUsZLUMDBdj","c":"celebrations","t":"Sending you a bouquet of happiness on your birthday!\"","p":"Celebration · Lagos","n":"Mrs. Tobi and her family say a big thank you to all their well-wishers","w":2157,"h":1440},{"k":"DUqjQ_HjKwy","c":"celebrations","t":"Mrs. Tobi’s 50th was a grand celebration of life, love, and…","p":"Celebration · Lagos","n":"Mrs. Tobi’s 50th was a grand celebration of life, love, and God’s faithfulness. Surrounded by family and friends, she gave thanks and rejoiced in style. Golden. Grateful. Glorious. SLOT AVAILABLE FOR FEBRUARY AVAILABLE TO TRAVEL","w":2157,"h":1440},{"k":"DUqVx3HDJ4n","c":"celebrations","t":"Dancing into 50 with praise and gratitude","p":"Celebration · Lagos","n":"Mrs. Tobi celebrated her golden jubilee in grand style, giving all glory to God and appreciating the love from family and friends. A royal celebration led by thanksgiving","w":2157,"h":1440},{"k":"DUp4QRzjMoO","c":"celebrations","t":"Wishing a day full of love, laughter, and happiness, or…","p":"Celebration · Lagos","n":"wishing a day full of love, laughter, and happiness, or celebrating another \"trip around the sun. Mrs Tobi was surrounded by so much love and happiness We was celebrate in grand style You trust to always deliver Book Omp studios Today","w":2157,"h":1440},{"k":"DUnqn37DPll","c":"celebrations","t":"Dancing into 50 with praise and gratitude","p":"Celebration · Lagos","n":"Mrs. Tobi celebrated her golden jubilee in grand style, giving all glory to God and appreciating the love from family and friends. A royal celebration led by thanksgiving","w":2157,"h":1440},{"k":"DUnpePVjJu9","c":"celebrations","t":"She didn’t just celebrate","p":"Celebration · Lagos","n":"she danced through it With a heart full of gratitude, Mrs. Tobi gave thanks to God, her family, friends, and everyone who came to celebrate her. 50 years of grace. 50 years of favor. A queen with a thankful heart","w":2157,"h":1440},{"k":"DUno7NkjPAN","c":"celebrations","t":"Mrs. Tobi’s milestone celebration was the definition of class…","p":"Celebration · Lagos","n":"Mrs. Tobi’s milestone celebration was the definition of class, luxury, and royalty. Fifty years of grace, strength, and undeniable impact","w":2157,"h":1440},{"k":"DUnoOJPDEi_","c":"celebrations","t":"Royalty","p":"Celebration · Lagos","n":"Grandeur. Legacy. Mrs. Tobi’s 50th birthday was celebrated in magnificent style — a true reflection of a queen whose impact speaks volumes. Golden jubilee done the royal way","w":1440,"h":1939},{"k":"DUnnoOAjPiY","c":"celebrations","t":"A Queen at 50","p":"Celebration · Lagos","n":"Mrs. Tobi’s golden jubilee was nothing short of royalty. Celebrated in grand style, surrounded by love, honor, and elegance. Fifty years of grace. Fifty years of legacy. Long live the Queen!","w":2157,"h":1440},{"k":"DUnnQ-njGO7","c":"celebrations","t":"A golden celebration for a woman of grace, strength, and…","p":"Celebration · Lagos","n":"A golden celebration for a woman of grace, strength, and timeless beauty. Cheers to five decades of impact, love, and elegance. Happy Golden Jubilee, ma!","w":2157,"h":1440},{"k":"DUdNetpDL3R","c":"weddings","t":"Congratulations on your beautiful union","p":"Wedding · Lagos","n":"May your home be filled with love, laughter, peace, and endless joy. Wishing you a lifetime of happiness together Book a session to experience omp moment","w":1440,"h":1939},{"k":"DUdMwOAjPu0","c":"weddings","t":"Surrounded by love, sealed with vows, and celebrated with joy","p":"Wedding · Lagos","n":"A wedding day to remember forever","w":2156,"h":1439},{"k":"DUc1U_AjGnh","c":"weddings","t":"A beautiful union sealed in love","p":"Wedding · Lagos","n":"Two hearts, one forever. Cheers to a lifetime of happiness","w":2156,"h":1439},{"k":"DUaZ7LeDMpC","c":"weddings","t":"Love sealed","p":"Wedding · Lagos","n":"Joy shared. wedding day Forever starts here","w":1440,"h":1939},{"k":"DUaYbkGDH7R","c":"weddings","t":"A day made of love and memories wedding glimpse that gives you…","p":"Wedding · Lagos","n":"A day made of love and memories wedding glimpse that gives you butterflies Swipe to feel the joy","w":1440,"h":1939},{"k":"DUQorPdjMQX","c":"couples","t":"Rooted in tradition, blossoming in love","p":"Love Story · Lagos","n":"A union of hearts and heritage","w":1440,"h":1800},{"k":"DUQhPR9DHJ5","c":"couples","t":"Two Hearts","p":"Love Story · Lagos","n":"One promise. Forever loading…","w":1440,"h":1799},{"k":"DUQZcg9DJbQ","c":"couples","t":"In your arms, I found peace","p":"Love Story · Lagos","n":"In your heart, I found home. Booking For February Can come in Available for catching flights","w":1440,"h":1799},{"k":"DT3FzbMjPtz","c":"couples","t":"Rooted in tradition, blossoming in love","p":"Love Story · Lagos","n":"A union of hearts and heritage","w":1440,"h":1800},{"k":"DT3F0WcDCG1","c":"couples","t":"What God has joined together, love will always sustain","p":"Love Story · Lagos","n":"A beautiful journey blessed from the very beginning","w":1440,"h":1799},{"k":"DT2clwlDBh6","c":"couples","t":"Best friends who fell in love","p":"Love Story · Lagos","n":"and decided forever sounds like a good idea","w":1440,"h":1800},{"k":"DT2cpgajHPT","c":"couples","t":"Two hearts, one promise","p":"Love Story · Lagos","n":"This is not just a love story… it’s a lifetime in the making","w":1440,"h":1800},{"k":"DTx34ozjf0m","c":"couples","t":"Just two people, deeply in love, counting down to forever","p":"Love Story · Lagos","n":"A pre-wedding shoot that speaks chemistry, connection, and commitment. This is not just a shoot, it’s the beginning of a lifetime story. OMPStudio LoveUnlocked","w":1440,"h":1920},{"k":"DTx3kwPjeZ7","c":"couples","t":"Every love story has a moment before the “I do.”","p":"Love Story · Lagos","n":"A quiet season filled with laughter, promises, and dreams of forever. These frames remind us that love is not just about the wedding day, but about choosing each other every single day. Here’s to love, joy, and a lifetime together. OMPStudio LoveUnlocked","w":1440,"h":1800},{"k":"DTxlLVGjMWY","c":"couples","t":"Two hearts","p":"Love Story · Lagos","n":"One journey. Before the vows, before the forever, here’s a glimpse into a love that chose purpose, patience, and partnership. This pre-wedding session captures more than pictures, it tells a story of friendship, commitment, and a beautiful “yes” to forever.…","w":1440,"h":1800},{"k":"DTssIZFDP0M","c":"portraits","t":"It Started as a Normal Day","p":"Portrait · Lagos","n":"Then Love Took Over Mrs Lovelyn had no idea that her birthday was about to turn into one of her most unforgettable days. What she thought would be simple and quiet became a beautiful surprise carefully planned by her husband, with love written all over it.…","w":1440,"h":1939},{"k":"DTihUKwjP4T","c":"couples","t":"Two hearts, one journey","p":"Love Story · Lagos","n":"A love story beautifully captured the i do This is what forever looks like","w":1440,"h":1799},{"k":"DTigleJDAoX","c":"couples","t":"Before the vows, before the rings","p":"Love Story · Lagos","n":"Just love, laughter, and moments that last forever We loved capturing this beautiful journey. Couples: Mr Igekenle & Mrs motun","w":1440,"h":1799},{"k":"DTTAyL3jPiZ","c":"portraits","t":"Mrs Ronke’s 50th birthday was more than a celebration of age —…","p":"Portrait · Lagos","n":"Mrs Ronke’s 50th birthday was more than a celebration of age — it was a celebration of family, friendship, love, and legacy. From the warmth of her loved ones to the presence of friends and well-wishers who came from near and far, every moment reflected a…","w":1440,"h":1939},{"k":"DTTAAAvjNEi","c":"celebrations","t":"Truly beautiful woman, surrounded by love","p":"Celebration · Lagos","n":"Mrs Ronke’s 50th birthday was more than a celebration of age — it was a celebration of family, friendship, love, and legacy. From the warmth of her loved ones to the presence of friends and well-wishers who came from near and far, every moment reflected a…","w":1440,"h":1939},{"k":"DTS_mohjNq9","c":"celebrations","t":"It was a celebration of family, friendship, love, and legacy","p":"Celebration · Lagos","n":"From the warmth of her loved ones to the presence of friends and well-wishers who came from near and far, every moment reflected a life well lived and deeply cherished. Above all, we return all the glory to God . Fifty years of life is a testimony of God’s…","w":2157,"h":1440},{"k":"DTS-uhADLl0","c":"celebrations","t":"Mrs Ronke’s 50th birthday was more than a celebration of age —…","p":"Celebration · Lagos","n":"Mrs Ronke’s 50th birthday was more than a celebration of age — it was a celebration of family, friendship, love, and legacy. From the warmth of her loved ones to the presence of friends and well-wishers who came from near and far, every moment reflected a…","w":2157,"h":1440},{"k":"DTS-P43DGmW","c":"celebrations","t":"His hand has been evident, and this milestone stands as proof…","p":"Celebration · Lagos","n":"His hand has been evident, and this milestone stands as proof that God keeps His promises. Cheers to Mrs Ronke, her beautiful family, and everyone who came out to honor and celebrate this golden milestone","w":2157,"h":1440},{"k":"DTS3HGjjJTC","c":"celebrations","t":"Mrs Ronke’s 50th birthday was more than a celebration of age —…","p":"Celebration · Lagos","n":"Mrs Ronke’s 50th birthday was more than a celebration of age — it was a celebration of family, friendship, love, and legacy. From the warmth of her loved ones to the presence of friends and well-wishers who came from near and far, every moment reflected a…","w":1440,"h":1939},{"k":"DTS1BEZjD_3","c":"celebrations","t":"Truly beautiful woman, surrounded by love","p":"Celebration · Lagos","n":"Mrs Ronke’s 50th birthday was more than a celebration of age — it was a celebration of family, friendship, love, and legacy. From the warmth of her loved ones to the presence of friends and well-wishers who came from near and far, every moment reflected a…","w":2157,"h":1440},{"k":"DTS0SqmjBHG","c":"celebrations","t":"Celebrating 50 years of beauty, strength, and grace","p":"Celebration · Lagos","n":"Mrs Ronke at 50 — a life worth celebrating","w":1440,"h":1939},{"k":"DTSxA02jIiG","c":"celebrations","t":"Designed With Love For A Woman Worth Celebrating","p":"Celebration · Lagos","n":"Mrs Ronke's 50th Birthday Decor Was All Shades Of Elegance And Joy","w":2157,"h":1440},{"k":"DTSpI3xDO58","c":"celebrations","t":"A Celebration Styled To Perfection","p":"Celebration · Lagos","n":"Mrs. Ronke At 50 -Where elegance met excellence in decor. Truly a golden milestone BOOK US NOW","w":2157,"h":1440},{"k":"DTSmgO1jJwh","c":"celebrations","t":"Golden Details For A Golden Woman","p":"Celebration · Lagos","n":"Mrs. Ronke's 50th Birthday - Classy, timeless, and breathtaking Every detail spoke grace","w":2157,"h":1440},{"k":"DSfkl9oDC0B","c":"celebrations","t":"Cheers to 40 years of strength, beauty, and purpose","p":"Celebration · Lagos","n":"Mrs Debbie’s birthday celebration was truly one for the books Welcome to the fabulous 40s","w":2157,"h":1440},{"k":"DSfj-KGjP5H","c":"celebrations","t":"Cheers to 40 years of strength, beauty, and purpose","p":"Celebration · Lagos","n":"Mrs Debbie’s birthday celebration was truly one for the books Welcome to the fabulous 40s DebbieAt40","w":2157,"h":1440},{"k":"DSfjLKUDHRi","c":"celebrations","t":"Forty years of grace, beauty, and impact","p":"Celebration · Lagos","n":"Mrs Debbie stepped into 40 surrounded by love and celebration A milestone worth remembering Happy 40th birthday, Mrs Debbie SEND A DM NOW TO EXPRENICE OMP TODAY","w":1440,"h":1939},{"k":"DSfZt4ojAY7","c":"celebrations","t":"Mrs Debbie turned 40, and it was nothing short of amazing","p":"Celebration · Lagos","n":"A milestone birthday celebrated with joy, smiles, and beautiful memories. Here's to many more years of laughter, good health, and happiness Happy 40th Birthday","w":2157,"h":1440},{"k":"DSfXFXIDAxx","c":"portraits","t":"Celebrating 40 years of strength, love, and grace","p":"Portrait · Lagos","n":"Mrs Debbie's birthday was filled with warmth, beauty, and priceless moments Happy 40th birthday to an amazing woman Catering Drink\\Cocktails Small chops/After party eats Grills\\After party eats Band Screen Venue Decorations Content Security Hostesses Lead…","w":2157,"h":1440},{"k":"DSfQI9BjHVe","c":"celebrations","t":"Mrs Debbie's 40th birthday celebration","p":"Celebration · Lagos","n":"A beautiful milestone marked with love, laughter, and unforgettable memories. Thank you for trusting to capture your special day WE OPEN FOR BOOKINGS DM FOR BOOKINGS EXPERIENCE OMP STUDIOS TODAY # memoriescaptured","w":1440,"h":1939},{"k":"DSfBY5LjL-5","c":"celebrations","t":"Celebrating 40years of strength, love, and grace","p":"Celebration · Lagos","n":"Mrs Debbie's birthday was filled with warmth, beauty, and priceless moments Happy birthday to an amazing woman","w":1440,"h":1939},{"k":"DSe_8BGDEvk","c":"celebrations","t":"40.Fabulous","p":"Celebration · Lagos","n":"fearless Mrs Debbie's 40th birthday celebration was a whole vibe Cheers to life at 40","w":2157,"h":1440},{"k":"DSe9ChOjHz_","c":"celebrations","t":"Forty looks absolutely beautiful on Mrs Debbie","p":"Celebration · Lagos","n":"A Day filled with grace, love, laugther, and unforgettable moments. cheers to 40 years of purpose, growth, and blessings Happy birthday, Mrs Debbie","w":2157,"h":1440},{"k":"DScLZZsjO7I","c":"celebrations","t":"Indeed, we belong to Allah and to Him we shall return","p":"Celebration · Lagos","n":"In remembrance of Alhaja Alimotu. May Allah grant her Al-Jannah Firdaus and grant the family sabr","w":1080,"h":1455},{"k":"DScKEJ2DDdq","c":"celebrations","t":"A life remembered, a soul at peace","p":"Celebration · Lagos","n":"Rest well, Alhaja Alimotu. 360 BOOTH WE ARE OPEN FOR BOOKINGS EXPERIENCE OMP STUDIOS TODAY..... # memoriesthatlast","w":1080,"h":1455},{"k":"DScIzipjPz7","c":"celebrations","t":"With heavy hearts, we remember Alhaja Alimotu","p":"Celebration · Lagos","n":"A woman of grace, strength, and dignity. May Allah grant her eternal rest and forgive her shortcomings","w":1080,"h":1455},{"k":"DSXMhgAjLgu","c":"celebrations","t":"Forever remembered, forever cherished","p":"Celebration · Lagos","n":"We celebrate the life and legacy of Alhaja Alimotu. May Allah grant her Al-Jannah Firdaus and comfort everyone she left behind","w":2157,"h":1440},{"k":"DSUjzudjNpG","c":"celebrations","t":"Forever remembered, forever cherished","p":"Celebration · Lagos","n":"We celebrate the life and legacy of Alhaja Alimotu. May Allah grant her Al-Jannah Firdaus and comfort everyone she left behind","w":1440,"h":1939},{"k":"DSCXiBcjF7j","c":"weddings","t":"CELEBRATING MR.SUNDAY AT 55-surrounded by love, a supportuve…","p":"Wedding · Lagos","n":"CELEBRATING MR.SUNDAY AT 55-surrounded by love, a supportuve wife and amazing people who came to honour him. a beautiful milestone for a truly remarkable man","w":2157,"h":1440},{"k":"DSCWhBtDPSt","c":"celebrations","t":"A man celebrated by people","p":"Celebration · Lagos","n":"A man of honuor A MAN celebrated by family a MAN of wisdom we grateful we captured beautiful moment we wish you long life and prosperity Continue to age graceful happy birthday Mr sunday","w":2157,"h":1440},{"k":"DSCVgyDDCdS","c":"celebrations","t":"Celebrating double 5 years of vission, leadership and a life…","p":"Celebration · Lagos","n":"Celebrating double 5 years of vission, leadership and a life well lived. cheers to many more","w":2157,"h":1440},{"k":"DSCU0sTjDG5","c":"celebrations","t":"Wishing mr sunday, a beautiful 55th year ahead","p":"Celebration · Lagos","n":"more bleesings, more laugther, more success. GOD blessing continue to abibe in your home and family","w":2157,"h":1440},{"k":"DSAAP8ujGFU","c":"celebrations","t":"Cheers to 55th of impact-Happy birthday mr sunday","p":"Celebration · Lagos","n":"grace, wisdom, and greatness in full bloom","w":2157,"h":1440},{"k":"DR_920LDJ15","c":"celebrations","t":"A remarkable milestone for a remarkable man","p":"Celebration · Lagos","n":"HAPPY BIRTHAY AT 55th, MR SUNDAY","w":2157,"h":1440},{"k":"DR_9YKODGWy","c":"celebrations","t":"Hononuring a man of wisdom, strength, and integrity","p":"Celebration · Lagos","n":"Happy 55th birthday, Mr sunday","w":2157,"h":1440},{"k":"DRy5uKbDPyj","c":"celebrations","t":"A beautiful life is never walked alone","p":"Celebration · Lagos","n":"At 55, he stands blessed — surrounded by joy, held by purpose, and loved by the woman who has walked every step with him. Her elegance is not only seen, but felt. Her embrace is his safe place. Together, they are proof that love is timeless. Happy Birthday to…","w":1440,"h":1939},{"k":"DRy45HmDN8d","c":"celebrations","t":"A king and his majesty","p":"Celebration · Lagos","n":"Some milestones are more than numbers — they are celebrations of love, resilience, and the people who stand beside us. Today, we honor a man who wears 55 with pride, a gentleman whose heart remains anchored in humility. And beside him, a wife whose beauty…","w":1440,"h":1939},{"k":"DRy3XcHDDoC","c":"celebrations","t":"A life well-lived is not measured by years, but by the impact…","p":"Celebration · Lagos","n":"A life well-lived is not measured by years, but by the impact carried through them. Today, we celebrate a man who wears 55 with grace, wisdom, and quiet strength. A mentor, a leader, a gentleman with a heart that uplifts generations. From the lessons he has…","w":1440,"h":1939},{"k":"DRjitjwDCll","c":"weddings","t":"Love that make you safe","p":"Wedding · Lagos","n":"love that lead and every moment was captured by Bride","w":1440,"h":1939},{"k":"DRjf500jIGf","c":"weddings","t":"Beautiful moment that make you giggle","p":"Wedding · Lagos","n":"the kind that calm your nerves... cheer to forever Bride","w":1440,"h":1939},{"k":"DRjdyudDLNX","c":"weddings","t":"At we capture every moment, every shot has creavtive meaning","p":"Wedding · Lagos","n":"abiola&damilare25","w":2156,"h":1439},{"k":"DRhNM1IDLws","c":"weddings","t":"Wedding Day","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":2156,"h":1439},{"k":"DRhMGryDEAy","c":"weddings","t":"CREATIVE MOMENT WITH","p":"Wedding · Lagos","n":"creaturing \"HAPPILY EVER AFTER\" Bride Planne","w":2156,"h":1439},{"k":"DRhBCAcjIqR","c":"weddings","t":"We didnt just take pictcure we created a collection of memories","p":"Wedding · Lagos","n":"the kind you sit and re-live every moment, the kind you feel butterflies in your tummy ABIOLA&DAMILARE MADE A BEAUTIFUL COUPLES BRIDE","w":2156,"h":1439},{"k":"DReWwazDJJY","c":"weddings","t":"A BEAUTIFUL CHAPTER IN SOMEONE'S FOREVER","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":2156,"h":1439},{"k":"DReVqZRjCck","c":"weddings","t":"\"Cinematically capturing forever\"","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1939},{"k":"DReTnvYDAgV","c":"weddings","t":"\"The kind of happiness that light up room\"","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":2160,"h":1215},{"k":"DRb0PuqDNvl","c":"weddings","t":"\"where time slows down and love stands still.\"","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":2160,"h":1215},{"k":"DRbyyTOjCLY","c":"weddings","t":"\"Framing love in its truest from.\"","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"DRbxWuQjFu_","c":"portraits","t":"\"Love in it's purest moment\"","p":"Portrait · Lagos","n":"A portrait captured in timeless frames by OMP Moments.","w":1440,"h":1800},{"k":"DRWtZQDDGAw","c":"weddings","t":"A love story curated by GOD","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"DRWpZA9jLgU","c":"weddings","t":"The kind of happiness that light up a room","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"DPNxpjPjFdp","c":"portraits","t":"Portrait","p":"Portrait · Lagos","n":"A portrait captured in timeless frames by OMP Moments.","w":1440,"h":1919},{"k":"DPMRawsjLzL","c":"couples","t":"A Love Story","p":"Love Story · Lagos","n":"Two hearts, one frame — a love story captured in timeless frames.","w":1440,"h":1919},{"k":"DPMCtieDOZI","c":"details","t":"Accessories","p":"Details · Lagos","n":"The small things that make the day — shoes, rings, beads and finishing touches.","w":1440,"h":1919},{"k":"DO6cIubDH7k","c":"couples","t":"A Love Story","p":"Love Story · Lagos","n":"Two hearts, one frame — a love story captured in timeless frames.","w":1440,"h":1801},{"k":"DO58a1fDIM3","c":"couples","t":"A Love Story","p":"Love Story · Lagos","n":"Two hearts, one frame — a love story captured in timeless frames.","w":1440,"h":1800},{"k":"DO5s4ASjM-3","c":"couples","t":"Pre weddings are for showing emotional representation of the…","p":"Love Story · Lagos","n":"Pre weddings are for showing emotional representation of the couples to be. Bride","w":1440,"h":1800},{"k":"DOn2XWPjBeD","c":"portraits","t":"Grace woven in heritage","p":"Portrait · Lagos","n":"A portrait captured in timeless frames by OMP Moments.","w":1440,"h":1800},{"k":"DOnoDSijJwg","c":"portraits","t":"Beauty and class met","p":"Portrait · Lagos","n":"A portrait captured in timeless frames by OMP Moments.","w":1440,"h":1800},{"k":"DOf9B47jJNF","c":"celebrations","t":"Dance steps too bad","p":"Celebration · Lagos","n":"Family, friends and a milestone worth remembering.","w":1440,"h":1920},{"k":"DOf8BgAjIv-","c":"celebrations","t":"A Celebration","p":"Celebration · Lagos","n":"Family, friends and a milestone worth remembering.","w":1440,"h":961},{"k":"DOf70LujAIB","c":"celebrations","t":"A Celebration","p":"Celebration · Lagos","n":"Family, friends and a milestone worth remembering.","w":1349,"h":900},{"k":"DOeQBQhjLB2","c":"celebrations","t":"Drum roll","p":"Celebration · Lagos","n":"Family, friends and a milestone worth remembering.","w":1440,"h":960},{"k":"DOeMyhjDBuU","c":"celebrations","t":"Best at capturing decorations for events","p":"Celebration · Lagos","n":"Family, friends and a milestone worth remembering.","w":1440,"h":959},{"k":"DN73VKuDBLq","c":"celebrations","t":"A king at 90","p":"Celebration · Lagos","n":"What a joy to celebrate this remarkable milestone filled with love, laughter, and family","w":1000,"h":668},{"k":"DN6HNjWjKW8","c":"celebrations","t":"90 years of grace, wisdom, and joy","p":"Celebration · Lagos","n":"OMP Moments was honored to capture this beautiful milestone","w":1000,"h":668},{"k":"DN3waKd2FRP","c":"celebrations","t":"From an empty hall to a night of laughter, love, food, and…","p":"Celebration · Lagos","n":"From an empty hall to a night of laughter, love, food, and dance every part of daddy ogunjimi’s birthday was a memory in motion. We captured the setup, the vibes, the entrance, the emotions, the speeches, and the wild party that followed. This is what a full…","w":1000,"h":668},{"k":"DN2R9F-2HYl","c":"celebrations","t":"Daddy Ogunjimis 90th Birthday Celebration The luxurious Ai…","p":"Celebration · Lagos","n":"Daddy Ogunjimis 90th Birthday Celebration The luxurious Ai Royal Hotel and Suites was abuzz with joy and celebration as family and friends gathered to honor Daddy Ogunjimis 90th birthday. The elegant ballroom was decorated with vibrant colors and balloons…","w":1000,"h":668},{"k":"DN1UL7E2K_v","c":"celebrations","t":"Good vibes, great people, and a man worth celebrating","p":"Celebration · Lagos","n":"Every shot from this birthday screams style and joy","w":1000,"h":668},{"k":"DIbhxBZsk8M","c":"details","t":"An entire story of love, commitment and forever been told","p":"Details · Lagos","n":"We Love, Love","w":738,"h":922},{"k":"DIbe74gMrqO","c":"couples","t":"From France to Nigeria","p":"Love Story · Lagos","n":"Such a beautiful Journey of Love. Cheers to forever Oyinye & Efemena Videographer/ Stylist Make up Beautiful moments deserves to be captured and shared","w":1018,"h":1252},{"k":"DC4EfdpMmVa","c":"weddings","t":"Wedding Day","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"DC4ENaYsRFH","c":"weddings","t":"Wedding Day","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"DC4D4wMMGSM","c":"weddings","t":"Wedding Day","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"DC4Cexfsa7x","c":"details","t":"In the Details","p":"Details · Lagos","n":"The small things that make the day — shoes, rings, beads and finishing touches.","w":1440,"h":1800},{"k":"DC4CTBMMcH8","c":"details","t":"In the Details","p":"Details · Lagos","n":"The small things that make the day — shoes, rings, beads and finishing touches.","w":1440,"h":1441},{"k":"DC4CKc6sRLx","c":"details","t":"Accessories","p":"Details · Lagos","n":"The small things that make the day — shoes, rings, beads and finishing touches.","w":1440,"h":1800},{"k":"DCtonUUM6YV","c":"weddings","t":"Exciting","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"DCtnxtgM8pP","c":"weddings","t":"We're in love","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"DCtnjpWszPj","c":"weddings","t":"Wedding Day","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1440},{"k":"DCq-R8SsaLv","c":"weddings","t":"Wedding Day","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"DCq9_OVsIDT","c":"weddings","t":"Of course, we are locked in","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"DCq9xbrMBbs","c":"weddings","t":"Getting ready and set","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1440},{"k":"DCOSYmUMPed","c":"weddings","t":"Wedding Day","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"DCOSMbpM2Ka","c":"portraits","t":"The Bride","p":"Portrait · Lagos","n":"A portrait captured in timeless frames by OMP Moments.","w":1440,"h":1800},{"k":"DCOR1DRMTqD","c":"weddings","t":"Wedding Day","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"DCGeT6cspo3","c":"details","t":"In the Details","p":"Details · Lagos","n":"The small things that make the day — shoes, rings, beads and finishing touches.","w":1440,"h":961},{"k":"DCGd5d0sfkB","c":"weddings","t":"Wedding Day","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"DCGdvZaMo1i","c":"weddings","t":"Beautiful moments","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"DB8LCseMIru","c":"weddings","t":"Wedding Day","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"DB8Kt2wsiQ3","c":"portraits","t":"Portrait","p":"Portrait · Lagos","n":"A portrait captured in timeless frames by OMP Moments.","w":1440,"h":1800},{"k":"DBq3ULCM7cl","c":"weddings","t":"You just have to love the feelling of love and togetherness","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"DBgN0-psLtu","c":"portraits","t":"Portrait","p":"Portrait · Lagos","n":"A portrait captured in timeless frames by OMP Moments.","w":1440,"h":1800},{"k":"DBgNejdM6RV","c":"weddings","t":"Creating memories that would linger forever","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"DBbjD-1s5Oc","c":"portraits","t":"Portrait","p":"Portrait · Lagos","n":"A portrait captured in timeless frames by OMP Moments.","w":1440,"h":1800},{"k":"DBazkRmMS04","c":"portraits","t":"Feeling excited for the big day","p":"Portrait · Lagos","n":"A portrait captured in timeless frames by OMP Moments.","w":1440,"h":1800},{"k":"DBauCMAM1Z_","c":"details","t":"Beautiful moments need to be accessorised","p":"Details · Lagos","n":"The small things that make the day — shoes, rings, beads and finishing touches.","w":1440,"h":961},{"k":"C9iY8I6Nmsc","c":"details","t":"In the Details","p":"Details · Lagos","n":"The small things that make the day — shoes, rings, beads and finishing touches.","w":1440,"h":961},{"k":"C9iYze9t_Gm","c":"portraits","t":"Portrait","p":"Portrait · Lagos","n":"A portrait captured in timeless frames by OMP Moments.","w":1440,"h":1800},{"k":"C9iYR4utU0u","c":"details","t":"In the Details","p":"Details · Lagos","n":"The small things that make the day — shoes, rings, beads and finishing touches.","w":1440,"h":1800},{"k":"C5avGJttwr4","c":"weddings","t":"Here comes the beautiful Bride and her girls","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1080,"h":1080},{"k":"C5at1CTN4Pw","c":"weddings","t":"Wedding Day","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1080,"h":720},{"k":"C5X_2VgNu9x","c":"weddings","t":"Diamonds are forever, and so is our love","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1080,"h":1350},{"k":"C5X-6ysNItu","c":"weddings","t":"Love makes life sweeter","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1080,"h":1350},{"k":"C5Voj0SNH40","c":"details","t":"Happy wedding","p":"Details · Lagos","n":"Happy day. Happy everything","w":1080,"h":1350},{"k":"C5VoOzXNPrd","c":"details","t":"All you need is love","p":"Details · Lagos","n":"The small things that make the day — shoes, rings, beads and finishing touches.","w":1080,"h":1080},{"k":"C5Vm3GvtQ-6","c":"details","t":"Once upon a time, is now forever","p":"Details · Lagos","n":"The small things that make the day — shoes, rings, beads and finishing touches.","w":1080,"h":1350},{"k":"C5QSjfVNxkw","c":"weddings","t":"Every day you prove to me that happily-ever-after really exists","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1080,"h":1350},{"k":"C5QSLCMNEGJ","c":"weddings","t":"We are united by love and a heartbeat","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1080,"h":1350},{"k":"C5QQtdJteIy","c":"weddings","t":"All I need for true happiness is having you by my side","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1080,"h":1350},{"k":"C4-MNJ6N9YH","c":"weddings","t":"Without you, my life would be incomplete","p":"Wedding · Lagos","n":"Bride B Sister","w":1080,"h":1350},{"k":"C4-HrVPN-tC","c":"weddings","t":"When I met you, I forgot what life was like without you","p":"Wedding · Lagos","n":"Bride B Sister","w":1080,"h":720},{"k":"C4-HQnDtdzw","c":"weddings","t":"The love I feel towards you is an eternal and never-ending…","p":"Wedding · Lagos","n":"The love I feel towards you is an eternal and never-ending journey. Bride B Sister","w":1080,"h":1350},{"k":"C4-Go-Aty2D","c":"weddings","t":"All I need for true happiness is having you by my side","p":"Wedding · Lagos","n":"Bride B Sister","w":1080,"h":1350},{"k":"C4-EjynNk_v","c":"weddings","t":"To have and to hold","p":"Wedding · Lagos","n":"Bride B Sister","w":1080,"h":1350},{"k":"C4-AwrCtLrL","c":"details","t":"We did a thing","p":"Details · Lagos","n":"Bride B Sister","w":1080,"h":1350},{"k":"C4-ANn2NSmj","c":"portraits","t":"All of my smiles start with you","p":"Portrait · Lagos","n":"Bride B Sister","w":1080,"h":1350},{"k":"C49_YF8tXDq","c":"details","t":"Let's get ready for this union","p":"Details · Lagos","n":"Bride B Sister","w":1080,"h":1350},{"k":"C4xbwUcNMPL","c":"portraits","t":"This day was perfect as this","p":"Portrait · Lagos","n":"AKMOD23 Live band Security","w":1080,"h":1350},{"k":"C4xU6n3NzeU","c":"weddings","t":"\"To get the full value of joy you must have someone to divide…","p":"Wedding · Lagos","n":"\"To get the full value of joy you must have someone to divide it with.\" AKMOD23 Live band Security","w":1080,"h":720},{"k":"C4viO3StIaS","c":"weddings","t":"AKMOD23","p":"Wedding · Lagos","n":"Live band Security","w":1080,"h":1350},{"k":"C4vh2q3NF4f","c":"details","t":"Starting a journey of a lifetime with my forever person","p":"Details · Lagos","n":"AKMOD23 Live band Security","w":1080,"h":1350},{"k":"C4vhSPPNLVo","c":"details","t":"From stunning Veils to beautiful apparels on your special day","p":"Details · Lagos","n":"AKMOD23 Live band Security","w":1080,"h":721},{"k":"C4vgIU8tiBa","c":"weddings","t":"Falling in love over and over again with one I call mine","p":"Wedding · Lagos","n":"AKMOD23 Live band Security","w":1080,"h":1350},{"k":"C4vfySXNZ7A","c":"weddings","t":"From dating till forever, this is our journey","p":"Wedding · Lagos","n":"AKMOD23 Live band Security","w":1080,"h":1350},{"k":"C4vfXPytXUt","c":"weddings","t":"Making memories before we say 'I do' AKMOD23","p":"Wedding · Lagos","n":"Live band Security","w":1080,"h":1350},{"k":"C4qWuCLtFBq","c":"weddings","t":"And sometimes you love a person just because they feel like home","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1080,"h":1352},{"k":"C4qVhzMNxeL","c":"weddings","t":"The party don’t start ‘til we walk in","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1080,"h":1352},{"k":"C4qVAZPtaTi","c":"weddings","t":"Love is a friendship set to music","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1080,"h":1350},{"k":"C4muKL2t2Wo","c":"weddings","t":"Finding a happy place is right in your arms","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1080,"h":1350},{"k":"C4kNKCdNzW-","c":"details","t":"Check out her bling","p":"Details · Lagos","n":"On our way to forever","w":1080,"h":1350},{"k":"C4kMk9-tyiY","c":"details","t":"If you like it, then you shoulda put a ring on it","p":"Details · Lagos","n":"The small things that make the day — shoes, rings, beads and finishing touches.","w":1080,"h":1350},{"k":"C4kL1fTt6KJ","c":"details","t":"Nothing fancy, just love","p":"Details · Lagos","n":"And these new rings","w":1080,"h":1350},{"k":"C4fX4aFtDkH","c":"weddings","t":"Together is a beautiful place to be.\"","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1080,"h":1350},{"k":"C4fWGnptJX4","c":"couples","t":"Counting down the days until forever begins","p":"Love Story · Lagos","n":"Embracing love, laughter, and a lifetime of adventures together","w":1080,"h":1350},{"k":"C4fVKBJtt2k","c":"couples","t":"Embarking on the journey of forever with my love Pre-wedding…","p":"Love Story · Lagos","n":"Embarking on the journey of forever with my love Pre-wedding bliss captured in every moment. Here's to love, laughter, and happily ever after! Bride","w":1080,"h":1350},{"k":"C4FsP5Gt_Wf","c":"weddings","t":"Forever begins with 'I do.' Celebrating the magic of love and a…","p":"Wedding · Lagos","n":"Forever begins with 'I do.' Celebrating the magic of love and a lifetime of adventures together","w":1080,"h":1350},{"k":"C4FrxpxtJEr","c":"weddings","t":"Walking hand in hand into our forever","p":"Wedding · Lagos","n":"Grateful for every moment and excited for the chapters to come","w":1080,"h":1350},{"k":"C4FrIWbt1Gb","c":"details","t":"A day to remember, a love to last forever","p":"Details · Lagos","n":"Here's to the beginning of our beautiful journey as Mr. and Mrs","w":1080,"h":1349},{"k":"C3iaI53tAIM","c":"couples","t":"She stole my heart, so I'm giving her my last name","p":"Love Story · Lagos","n":"Two hearts, one frame — a love story captured in timeless frames.","w":1080,"h":1350},{"k":"C3iY31etsJo","c":"couples","t":"With a touch of love, everyone becomes a poet","p":"Love Story · Lagos","n":"Two hearts, one frame — a love story captured in timeless frames.","w":864,"h":1080},{"k":"Cu042U5N-hn","c":"portraits","t":"NYINYE & EFEMENA","p":"Portrait · Lagos","n":"A portrait captured in timeless frames by OMP Moments.","w":1440,"h":1792},{"k":"CuzS9CNN8fq","c":"weddings","t":"ONYINYE & EFEMENA","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1799},{"k":"Cuyp8Vat-D8","c":"weddings","t":"ONYINYE & EFEMENA","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":960},{"k":"Cug-YZBtkqI","c":"couples","t":"“The highest happiness on earth is the happiness of marriage.”","p":"Love Story · Lagos","n":"Two hearts, one frame — a love story captured in timeless frames.","w":1440,"h":1792},{"k":"Cqm7FuhDPN6","c":"couples","t":"A Love Story","p":"Love Story · Lagos","n":"Two hearts, one frame — a love story captured in timeless frames.","w":1440,"h":1799},{"k":"Cqm6MstDT8F","c":"couples","t":"A Love Story","p":"Love Story · Lagos","n":"Two hearts, one frame — a love story captured in timeless frames.","w":1440,"h":1800},{"k":"CqBgtHvt4-R","c":"weddings","t":"Wedding Day","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1792},{"k":"CqBD4j_N4hk","c":"portraits","t":"Portrait","p":"Portrait · Lagos","n":"A portrait captured in timeless frames by OMP Moments.","w":1440,"h":1792},{"k":"CqAvvEstID3","c":"portraits","t":"“I’ve always wanted you as a man from the first day I met you…","p":"Portrait · Lagos","n":"“I’ve always wanted you as a man from the first day I met you, and I knew this day will come when I will be you wife till eternity”","w":1440,"h":1792},{"k":"CnefVhCMXX-","c":"weddings","t":"I FEEL YOU","p":"Wedding · Lagos","n":"I WANT YOU I NEED YOU I CHRISH YOU I LOVE YOU","w":1440,"h":1800},{"k":"CkqM7iUoFgA","c":"weddings","t":"When you wear your wedding dress, you are not just a bride but…","p":"Wedding · Lagos","n":"When you wear your wedding dress, you are not just a bride but also a representation of your beautiful love story","w":1155,"h":1443},{"k":"CkqMM26Izu5","c":"details","t":"Wedding accessories play a role in your wedding; they tell a…","p":"Details · Lagos","n":"Wedding accessories play a role in your wedding; they tell a part of your story","w":1088,"h":1359},{"k":"CkqL0nwoHa3","c":"details","t":"Accessories are the best part of getting ready and getting…","p":"Details · Lagos","n":"Accessories are the best part of getting ready and getting married","w":1153,"h":1440},{"k":"CklKa8noqXz","c":"weddings","t":"When I look into ur eyes all I see is love...cheers to that","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"CklJsCfIa_B","c":"weddings","t":"We gather dey","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":961},{"k":"CklJLQcoNSG","c":"weddings","t":"Lots of love today and beyond, When I met you, you were a…","p":"Wedding · Lagos","n":"Lots of love today and beyond, When I met you, you were a strong and independent woman who single-handedly built a business. But, after I got to know you better I can tell that you are also a gentle and kind-hearted woman","w":1440,"h":960},{"k":"CklI3JzIuGs","c":"weddings","t":"Friends that stays together slays together, As they say, “The…","p":"Wedding · Lagos","n":"Friends that stays together slays together, As they say, “The destination doesn’t matter, the journey does.” Let me add that the companion throughout the journey matters the most. I am privileged to have you as my life partner; our marriage will be an…","w":1440,"h":960},{"k":"CklHUNTI4Hw","c":"weddings","t":"Through the storms of life, may your love for one another be…","p":"Wedding · Lagos","n":"Through the storms of life, may your love for one another be steadfast and strong ,I know I had been a miser when it came to expressing my feelings and love for you, but thank God you picked it up from my actions. I know how much you wish I would be more…","w":1440,"h":1800},{"k":"CklG6mJIs3Z","c":"portraits","t":"Congratulations on finding your source of happiness","p":"Portrait · Lagos","n":"Your greatest adventure has just begun","w":1440,"h":1800},{"k":"CklGpK8IMu0","c":"weddings","t":"Here's to the love and laughter...happy married life","p":"Wedding · Lagos","n":"You were there for me in my every pain and gain, and I never want our love to end. I appreciate all that you do for our family each and every day love you show me. There are so many moments in our married life that made me love you even more. Thank you for…","w":1440,"h":1800},{"k":"CklGRLkInRV","c":"weddings","t":"My wish came true..can't believe I'm now a Mrs","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"CklFh8no8WK","c":"weddings","t":"Today a bride, tommorow a wife, always ur daughter for life and…","p":"Wedding · Lagos","n":"Today a bride, tommorow a wife, always ur daughter for life and a friend for life","w":1440,"h":1800},{"k":"CkiZkdVIvig","c":"weddings","t":"I love you, not only for what you are, but for what I am when I…","p":"Wedding · Lagos","n":"I love you, not only for what you are, but for what I am when I am with you","w":1440,"h":961},{"k":"CkiZLB8IkZa","c":"weddings","t":"A kiss seals two souls for a moment in time, Darling, thank you…","p":"Wedding · Lagos","n":"A kiss seals two souls for a moment in time, Darling, thank you for entering my life and making it a paradise. I still remember our dating days when we used to look into each other’s eyes and talk about growing old together","w":1440,"h":1800},{"k":"CkiY7RFodyd","c":"weddings","t":"I promise to do my best to make you beam daily, so count on…","p":"Wedding · Lagos","n":"I promise to do my best to make you beam daily, so count on many surprises. Your smile will be my priority","w":1440,"h":1799},{"k":"CkiX7bHokTB","c":"details","t":"You can never have too many sparkly things for your big day","p":"Details · Lagos","n":"The small things that make the day — shoes, rings, beads and finishing touches.","w":1440,"h":1800},{"k":"CkiXKn8IBFZ","c":"portraits","t":"All smiles because I have found the one whom my soul loves","p":"Portrait · Lagos","n":"A portrait captured in timeless frames by OMP Moments.","w":1440,"h":1800},{"k":"CkiWuM2IGZ1","c":"portraits","t":"Your heart is full of love and affection","p":"Portrait · Lagos","n":"Your hands are always caring. I am lucky to have you as my wife. I will love you till eternity","w":1440,"h":1800},{"k":"CkgMhrKouBM","c":"portraits","t":"Forever begins today, thank you so much for choosing me as your…","p":"Portrait · Lagos","n":"Forever begins today, thank you so much for choosing me as your life partner. There is not one day when I do not thank God for sending you into my life. You are the most wonderful human being with a big and kind heart","w":1414,"h":1767},{"k":"CkgL5R4o70_","c":"portraits","t":"Just like marriage is God's gift to us, his children","p":"Portrait · Lagos","n":"our gift to him is the quality of our marriage","w":1414,"h":1767},{"k":"CkgLriwose1","c":"portraits","t":"The moment someone we love walks into our lives","p":"Portrait · Lagos","n":"its so amazing how we quickly forget the days we spent without them","w":1078,"h":1347},{"k":"CkgLKd1IisJ","c":"weddings","t":"I love being married, it's so great to find one special person…","p":"Wedding · Lagos","n":"I love being married, it's so great to find one special person you want to be with for the rest of your life","w":1414,"h":1768},{"k":"CkgK0HIIvcc","c":"weddings","t":"Grow old with me, the best is yet to come","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1415,"h":1768},{"k":"CkgKY3mo68K","c":"weddings","t":"Love recognizes no barriers","p":"Wedding · Lagos","n":"It jumps hurdles, leaps fences, penetrates walls to arrive at its destination full of hope","w":1415,"h":1768},{"k":"CkgJk0HolzV","c":"portraits","t":"I loved with a love that is more than love","p":"Portrait · Lagos","n":"A portrait captured in timeless frames by OMP Moments.","w":1415,"h":1768},{"k":"CkgGzBaIajC","c":"portraits","t":"If I had a flower for everytime I thought of you, I could walk…","p":"Portrait · Lagos","n":"If I had a flower for everytime I thought of you, I could walk through my garden forever","w":1440,"h":962},{"k":"CkdaE9MoiTU","c":"weddings","t":"I want you in all my memories","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1000,"h":1250},{"k":"CkdZThFodLk","c":"portraits","t":"We fit like pieces of a puzzle and nothing will pull us apart","p":"Portrait · Lagos","n":"A portrait captured in timeless frames by OMP Moments.","w":1001,"h":1251},{"k":"CkdUHixomo9","c":"weddings","t":"Congratulation to the new Mr and Mrs","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":961},{"k":"CkdT2CgoyGR","c":"weddings","t":"A picture perfect day","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":961},{"k":"CkdTRyQo6Oe","c":"weddings","t":"I always knew you were my soulmate","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":961},{"k":"CkaqVhKoN5c","c":"weddings","t":"My fav love story is ours","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":961},{"k":"CkapaYTIqs3","c":"weddings","t":"When I look into ur eyes all I see is our future","p":"Wedding · Lagos","n":"together","w":1440,"h":1800},{"k":"CkapKt_ol8B","c":"weddings","t":"I never want to stop making memories with you","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"CkaoI4iolUA","c":"weddings","t":"You stole my heart, but I'll let you keep it","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"CkQSQYwI9xn","c":"couples","t":"Love is beautiful","p":"Love Story · Lagos","n":"Two hearts, one frame — a love story captured in timeless frames.","w":1440,"h":1800},{"k":"CkQMwSDgebe","c":"weddings","t":"Wishing you nothing but a lifetime of love","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"CkON2t0IxNF","c":"weddings","t":"The party don't start until bride walks in","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800},{"k":"CkOM8S2oncH","c":"weddings","t":"Couple dance","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":960},{"k":"CkOLF4BITRO","c":"weddings","t":"Put a ring on it ","p":"Wedding · Lagos","n":"Every detail of the day, captured to last a lifetime.","w":1440,"h":1800}];
+  const SECTIONS = [
+    { c: 'weddings', name: 'Weddings', blurb: 'White weddings, traditional ceremonies and receptions — the vows, the dance floor and everyone who came to celebrate.' },
+    { c: 'couples', name: 'Love Stories', blurb: 'Pre-wedding shoots and couple sessions. The quiet season before “I do”, in studio and on location.' },
+    { c: 'portraits', name: 'Portraits', blurb: 'Brides, grooms and guests of honour, framed on their own.' },
+    { c: 'celebrations', name: 'Celebrations', blurb: 'Birthdays, jubilees and milestone parties — fifty, sixty, ninety years and the people who showed up for them.' },
+    { c: 'details', name: 'Details', blurb: 'Shoes, rings, beads and the finishing touches that make the day.' }
+  ];
+  const SHOTS = [
+    ['Ddbg9VnDh9D','Forever Officially Began','Wedding · Lagos','Love was in the air, happiness filled the room, and forever officially began. A beautiful celebration for a beautiful love story.'],
+    ['DdbyW5eDEW8','Timeless Moments','Wedding · Lagos','Love, laughter, and timeless moments beautifully captured. Your story deserves to be remembered this way.'],
+    ['DdbFuHeji1O','Divine Essence','Wedding · Lagos','Love designed and curated in heaven. Two families, one union, every detail in frame.'],
+    ['DdbDUe1DquA','The Special Glow','Traditional Wedding · Lagos','The special glow a bride radiates on her wedding day, captured in timeless frames.'],
+    ['Ddby-EKjBn8','One Beautiful Beginning','Wedding Reception · Lagos','Two hearts. One beautiful beginning. Every detail, captured to last a lifetime.'],
+    ['DdbeUhkDtgg','Something Magical','White Wedding · Lagos','There’s something magical about witnessing a love story come to life. May your love continue to grow, deepen and bloom beautifully.'],
+    ['DdbcJ8MDiCB','A Love Fairytale','Wedding · Lagos','A love story sealed with a love pact, and celebrated with the friends who stood beside it.'],
+    ['DdZQdEYDAcD','Before the Big I Do','Pre-Wedding · Lagos','Before the big “I do” there is just this magic.'],
+    ['DdZPMrDDKPC','A Seed Planted','Pre-Wedding · Lagos','A seed planted before a flower blooms. Every love story has a beginning.'],
+    ['Dax-jmXjE3p','Surprise at Fifty','Birthday Celebration · Lagos','Mr Olumide’s 50th birthday — a surprise party planned by family and friends who took their time to make it beautiful.'],
+    ['DaihybKjBJ7','No Flash Needed','Couple Portrait · Lagos','Their love almost blinded me. No flash needed.'],
+    ['DaiMteKDPzZ','Silent Smiles','Couple Portrait · Lagos','A love story defined by silent smiles, secret glances and the quiet moments that assured forever.'],
+    ['DYPWmh8jBsD','Two Hearts, One Frame','Pre-Wedding · Lagos','This is not just a love story. It’s a lifetime in the making.'],
+    ['DYE9-09jL3D','Before the Vows','Pre-Wedding · Lagos','Before the vows, before the aisle — just love in its purest form.'],
+    ['DU5JsGLDCoV','Grace and Greatness','Mr. KS @ 60 · Lagos','Not just a birthday but a remarkable journey. Sixty years of wisdom. Sixty years of impact.'],
+    ['DU3HMGvjBBP','A Gathering of Love','Mr. KS @ 60 · Lagos','It wasn’t just a celebration… it was a gathering of love. Friends, family and well-wishers came out in grand style.'],
+    ['DUnoOJPDEi_','Royalty. Grandeur. Legacy.','Mrs. Tobi @ 50 · Lagos','A golden jubilee celebrated in magnificent style — a true reflection of a queen whose impact speaks volumes.'],
+    ['DUdNetpDL3R','From I Do to Forever','Wedding · Lagos','Mr Damilare’s wedding was a perfect blend of love, family and celebration. Every moment was worth capturing.'],
+    ['DUQorPdjMQX','Rooted in Tradition','Pre-Wedding · Lagos','Rooted in tradition, blossoming in love. A union of hearts and heritage.'],
+    ['Db2iNCMjD00','Capturing the Bride','Traditional Wedding · Lagos','Weddings deserve to be properly documented. We don’t just document — we create timeless visuals, in photography and videography, that suit your desires.', true],
+    ['DT2clwlDBh6','Best Friends, Forever','Pre-Wedding · Lagos','Best friends who fell in love… and decided forever sounds like a good idea.']
+  ];
+  const BYKEY = {};
+  ARCHIVE.forEach(a => { BYKEY[a.k] = a; });
+  const SPHERE = SHOTS.map(([k, t, p, n, tall]) => {
+    const a = BYKEY[k] || { w: 3, h: 2 };
+    return { k, t, p, n, w: a.w, h: a.h, tall: !!tall };
+  });
+
+  const $ = s => document.querySelector(s);
+  const body = document.body, root = document.documentElement;
+  const stage = $('#stage'), world = $('#world'), orb = $('#orb'), headline = $('#headline');
+  const gridEl = $('#grid'), secsEl = $('#secs'), chipsEl = $('#chips');
+  const intro = $('#intro'), video = $('#film'), videoBg = $('#filmBg'), skipBtn = $('#skip');
+  const lit = $('#lit'), plate = lit.querySelector('.plate'), shotEl = lit.querySelector('.shot');
+  const litImg = $('#litImg'), litTitle = $('#litTitle'), litWhere = $('#litWhere'), litNote = $('#litNote'), litCount = $('#litCount');
+  const menu = $('#menu'), menuBtn = $('#menuBtn'), gridBtn = $('#gridBtn');
+  const coarse = matchMedia('(pointer:coarse)').matches;
+  const D2R = Math.PI / 180;
+  const thumb = k => IMG + k + '_t.webp';
+  const full = k => IMG + k + '.webp';
+
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  window.scrollTo(0, 0);
+  root.style.overflow = 'hidden';
+
+  /* ---------- sphere ---------- */
+  const N = SPHERE.length, GA = Math.PI * (3 - Math.sqrt(5));
+  const cards = [], vecs = [], cache = [];
+  SPHERE.forEach((s, i) => {
+    const y = 1 - (i / (N - 1)) * 2;
+    const rad = Math.sqrt(Math.max(0, 1 - y * y));
+    const theta = i * GA;
+    const x = Math.cos(theta) * rad, z = Math.sin(theta) * rad;
+    vecs.push({ x, y, z, lat: Math.asin(y) * 180 / Math.PI, lon: Math.atan2(x, z) * 180 / Math.PI });
+    const card = document.createElement('div');
+    card.className = 'card' + (s.tall ? ' tall' : '');
+    card.dataset.idx = i;
+    const fig = document.createElement('figure');
+    const img = document.createElement('img');
+    img.alt = s.t; img.draggable = false; img.decoding = 'async';
+    img.addEventListener('load', () => img.classList.add('in'));
+    img.src = thumb(s.k);
+    fig.appendChild(img); card.appendChild(fig); orb.appendChild(card);
+    cards.push(card); cache.push({ o: -1, d: -1 });
+  });
+
+  /* ---------- archive ---------- */
+  const gridFigs = [];
+  const counts = {};
+  ARCHIVE.forEach(a => { counts[a.c] = (counts[a.c] || 0) + 1; });
+  $('#gTotal').textContent = ARCHIVE.length;
+  const chipDefs = [{ c: 'all', name: 'All', n: ARCHIVE.length }].concat(SECTIONS.map(s => ({ c: s.c, name: s.name, n: counts[s.c] || 0 })));
+  chipDefs.forEach(d => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip' + (d.c === 'all' ? ' on' : ''); b.dataset.f = d.c;
+    b.innerHTML = d.name + ' <span>' + d.n + '</span>';
+    chipsEl.appendChild(b);
+  });
+  const frag = document.createDocumentFragment();
+  SECTIONS.forEach((s, si) => {
+    const items = ARCHIVE.filter(a => a.c === s.c);
+    if (!items.length) return;
+    const sec = document.createElement('section');
+    sec.className = 'g-sec'; sec.dataset.c = s.c; sec.id = 'sec-' + s.c;
+    const h = document.createElement('header');
+    h.className = 'g-sec-h';
+    h.innerHTML = '<h3></h3><span class="g-ct"></span><p></p>';
+    h.querySelector('h3').textContent = s.name;
+    h.querySelector('p').textContent = s.blurb;
+    h.querySelector('.g-ct').textContent = items.length + ' frames';
+    const cols = document.createElement('div');
+    cols.className = 'g-cols';
+    items.forEach(a => {
+      const f = document.createElement('figure');
+      f.dataset.k = a.k;
+      f.style.setProperty('--ar', (a.w / a.h).toFixed(4));
+      const im = document.createElement('img');
+      im.loading = 'lazy'; im.decoding = 'async'; im.alt = a.t; im.draggable = false;
+      im.addEventListener('load', () => im.classList.add('in'));
+      im.src = thumb(a.k);
+      const cap = document.createElement('figcaption');
+      cap.textContent = a.t;
+      const sm = document.createElement('small'); sm.textContent = a.p; cap.appendChild(sm);
+      f.append(im, cap); cols.appendChild(f); gridFigs.push(f);
+    });
+    sec.append(h, cols); frag.appendChild(sec);
+  });
+  secsEl.appendChild(frag);
+
+  let filter = 'all';
+  function setFilter(c, scroll) {
+    filter = c;
+    chipsEl.querySelectorAll('.chip').forEach(b => b.classList.toggle('on', b.dataset.f === c));
+    secsEl.querySelectorAll('.g-sec').forEach(s => { s.hidden = !(c === 'all' || s.dataset.c === c); });
+    if (scroll) {
+      const top = chipsEl.offsetTop - 10;
+      if (gridEl.scrollTop > top) gridEl.scrollTo({ top, behavior: 'auto' });
+    }
+  }
+  const stuckCheck = () => {
+    const top = parseFloat(getComputedStyle(chipsEl).top) || 0;
+    const gTop = gridEl.getBoundingClientRect().top + parseFloat(getComputedStyle(gridEl).paddingTop);
+    const stuck = chipsEl.getBoundingClientRect().top <= gTop + top + 1 && gridEl.scrollTop > 4;
+    body.classList.toggle('gstuck', stuck);
+  };
+  gridEl.addEventListener('scroll', stuckCheck, { passive: true });
+  addEventListener('resize', stuckCheck);
+  chipsEl.addEventListener('click', e => {
+    const b = e.target.closest('.chip');
+    if (b) setFilter(b.dataset.f, true);
+  });
+
+  /* ---------- layout ---------- */
+  let R = 300, W = 0, H = 0, persp = 1150;
+  function layout(force) {
+    const w = innerWidth, h = innerHeight;
+    if (!force && Math.abs(w - W) < 20 && Math.abs(h - H) < 20) return;
+    W = w; H = h;
+    const hr = w <= 380 ? .38 : w <= 640 ? .42 : .46;
+    const wr = w <= 380 ? .48 : w <= 640 ? .52 : .58;
+    const fl = w <= 380 ? 108 : w <= 640 ? 120 : 155;
+    R = Math.max(fl, Math.min(480, h * hr, w * wr));
+    const sc = w <= 380 ? .44 : w <= 640 ? .46 : .47;
+    root.style.setProperty('--cw', Math.round(Math.max(72, R * sc)) + 'px');
+    persp = w <= 380 ? 620 : w <= 640 ? 760 : w <= 900 ? 920 : 1150;
+    root.style.setProperty('--persp', persp + 'px');
+    for (let i = 0; i < N; i++) {
+      const v = vecs[i];
+      cards[i].style.transform =
+        `translate3d(${(v.x * R).toFixed(2)}px, ${(-v.y * R).toFixed(2)}px, ${(v.z * R).toFixed(2)}px) rotateY(${v.lon.toFixed(3)}deg) rotateX(${v.lat.toFixed(3)}deg)`;
+    }
+    clampScroll();
+  }
+  function clampScroll() {
+    const max = innerHeight * .16;
+    if (window.scrollY > max) window.scrollTo(0, max);
+  }
+
+  /* ---------- camera loop ---------- */
+  let spin = 0, tilt = -4, camZ = 0, dragX = 0, dragY = 0, velX = 0, velY = 0;
+  const PITCH = 32;
+  let focused = -1, dragging = false, litOpen = false, deep = false;
+  let lastWorld = '', lastHead = '', lastHeadOp = '';
+
+  function frame() {
+    if (!dragging && !litOpen) {
+      dragX += velX; dragY += velY;
+      velX *= .94; velY *= .94;
+      if (Math.abs(velX) < .002) velX = 0;
+      if (Math.abs(velY) < .002) velY = 0;
+    }
+    if (tilt + dragY > PITCH) { dragY = PITCH - tilt; velY = 0; }
+    if (tilt + dragY < -PITCH) { dragY = -PITCH - tilt; velY = 0; }
+
+    const p = Math.min(1, Math.max(0, window.scrollY / (innerHeight * .16)));
+    const target = p * Math.min(64, R * .12);
+    camZ += (target - camZ) * .075;
+    if (Math.abs(target - camZ) < .01) camZ = target;
+
+    const sx = tilt + dragY, sy = spin + dragX;
+    const wt = `translateZ(${camZ.toFixed(3)}px) rotateY(${sy.toFixed(3)}deg) rotateX(${sx.toFixed(3)}deg)`;
+    if (wt !== lastWorld) { world.style.transform = wt; lastWorld = wt; }
+    const ht = `rotateX(${(-sx).toFixed(3)}deg) rotateY(${(-sy).toFixed(3)}deg) translateZ(${(R * .62).toFixed(2)}px)`;
+    if (ht !== lastHead) { headline.style.transform = ht; lastHead = ht; }
+    const ho = Math.max(0, 1 - p * .55).toFixed(3);
+    if (ho !== lastHeadOp) { headline.style.opacity = ho; lastHeadOp = ho; }
+
+    const isDeep = p > .4;
+    if (isDeep !== deep) { deep = isDeep; body.classList.toggle('deep', deep); }
+
+    const cX = Math.cos(sx * D2R), sX = Math.sin(sx * D2R);
+    const cY = Math.cos(sy * D2R), sY = Math.sin(sy * D2R);
+    const shade = 1 - Math.min(1, p * 1.6);
+    const near = persp * .66;
+    for (let i = 0; i < N; i++) {
+      const v = vecs[i];
+      const px = v.x, py = -v.y, pz = v.z;
+      const z1 = py * sX + pz * cX;
+      const zf = -px * sY + z1 * cY;
+      const base = .14 + .86 * Math.pow((zf + 1) / 2, .85);
+      let dim = shade * (1 - base);
+      const absZ = zf * R + camZ;
+      let fade = absZ > near ? Math.max(0, 1 - (absZ - near) / 190) : 1;
+      if (litOpen) {
+        dim = Math.min(1, dim + .78);
+        if (i === focused) fade = 0;
+      }
+      const o = Math.round(fade * 1000) / 1000, d = Math.round(dim * 1000) / 1000;
+      const c = cache[i], el = cards[i];
+      if (o !== c.o) { el.style.opacity = o; c.o = o; }
+      if (d !== c.d) { el.style.setProperty('--d', d); c.d = d; }
+    }
+  }
+  function loop() { frame(); requestAnimationFrame(loop); }
+  layout(true);
+  frame();
+  requestAnimationFrame(loop);
+
+  /* ---------- intro film ---------- */
+  let filmErrored = false, revealed = false;
+  let revealTimer = 0, revealBackstop = 0, pausedCheck = 0;
+  function prep(v) {
+    v.muted = true; v.defaultMuted = true; v.playsInline = true;
+    v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', ''); v.setAttribute('muted', '');
+  }
+  prep(video); prep(videoBg);
+  function syncBg() {
+    if (revealed) return;
+    try {
+      videoBg.playbackRate = 2;
+      if (Math.abs(videoBg.currentTime - video.currentTime) > .25) videoBg.currentTime = video.currentTime;
+      if (videoBg.paused) { const p = videoBg.play(); if (p && p.catch) p.catch(() => {}); }
+    } catch (e) {}
+  }
+  video.addEventListener('play', () => { video.playbackRate = 2; });
+  video.addEventListener('playing', () => {
+    video.playbackRate = 2;
+    syncBg();
+    const dur = video.duration;
+    if (isFinite(dur) && dur > 0) {
+      clearTimeout(revealTimer);
+      const ms = Math.max(300, ((dur - video.currentTime - .45) / 2) * 1000);
+      revealTimer = setTimeout(reveal, ms);
+    }
+  });
+  video.addEventListener('pause', () => { try { videoBg.pause(); } catch (e) {} });
+  video.addEventListener('ended', reveal);
+  video.addEventListener('error', () => {
+    filmErrored = true;
+    intro.classList.add('novideo');
+    setTimeout(reveal, 1300);
+  });
+  function kick() {
+    if (revealed || filmErrored) return;
+    if (video.paused) { const pr = video.play(); if (pr && pr.catch) pr.catch(() => {}); }
+  }
+  function startFilm() {
+    revealBackstop = setTimeout(reveal, 14000);
+    try { if (video.currentTime > .05) video.currentTime = 0; } catch (e) {}
+    video.playbackRate = 2;
+    ['pointerdown', 'keydown', 'touchstart'].forEach(t => addEventListener(t, kick, { once: true, passive: true }));
+    try { const pr = video.play(); if (pr && pr.catch) pr.catch(() => {}); } catch (e) {}
+    pausedCheck = setTimeout(() => { if (video.paused) reveal(); }, 2600);
+  }
+  function reveal() {
+    if (revealed) return;
+    revealed = true;
+    clearTimeout(revealTimer); clearTimeout(revealBackstop); clearTimeout(pausedCheck);
+    intro.classList.add('closing');
+    body.classList.remove('locked');
+    root.style.overflow = '';
+    layout(true); frame();
+    requestAnimationFrame(() => { layout(true); frame(); });
+    setTimeout(() => {
+      layout(true); frame();
+      body.classList.add('revealed');
+      intro.classList.add('gone');
+      try { video.pause(); videoBg.pause(); } catch (e) {}
+      setTimeout(() => intro.remove(), 700);
+    }, 1000);
+  }
+  skipBtn.addEventListener('click', e => { e.stopPropagation(); reveal(); });
+  startFilm();
+
+  /* ---------- drag ---------- */
+  let ptr = null;
+  stage.addEventListener('pointerdown', e => {
+    if (litOpen) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const card = e.target.closest ? e.target.closest('.card') : null;
+    ptr = { id: e.pointerId, type: e.pointerType, x0: e.clientX, y0: e.clientY, lx: e.clientX, ly: e.clientY, t: performance.now(), card, cap: false };
+    velX = velY = 0;
+    if (e.pointerType !== 'touch') {
+      try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+      ptr.cap = true; dragging = true;
+    }
+  });
+  stage.addEventListener('pointermove', e => {
+    if (!ptr || e.pointerId !== ptr.id) return;
+    if (!ptr.cap) {
+      const dx = e.clientX - ptr.x0, dy = e.clientY - ptr.y0;
+      if (Math.hypot(dx, dy) < 10) return;
+      if (Math.abs(dy) > Math.abs(dx) * 1.15) { ptr = null; dragging = false; return; }
+      try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+      ptr.cap = true; dragging = true;
+    }
+    const mx = e.clientX - ptr.lx, my = e.clientY - ptr.ly;
+    ptr.lx = e.clientX; ptr.ly = e.clientY; ptr.t = performance.now();
+    const ax = mx * .13, ay = -my * .13;
+    dragX += ax; dragY += ay;
+    velX = velX * .35 + ax * .65;
+    velY = velY * .35 + ay * .65;
+  });
+  function endPtr(e, cancelled) {
+    if (!ptr || e.pointerId !== ptr.id) return;
+    const slop = (ptr.type === 'touch' || coarse) ? 14 : 6;
+    const dist = Math.hypot(e.clientX - ptr.x0, e.clientY - ptr.y0);
+    if (performance.now() - ptr.t > 90) { velX = 0; velY = 0; }
+    const card = ptr.card;
+    try { if (stage.hasPointerCapture(e.pointerId)) stage.releasePointerCapture(e.pointerId); } catch (err) {}
+    ptr = null; dragging = false;
+    if (!cancelled && dist < slop && card) { velX = velY = 0; openFromSphere(+card.dataset.idx); }
+  }
+  stage.addEventListener('pointerup', e => endPtr(e, false));
+  stage.addEventListener('pointercancel', e => endPtr(e, true));
+  stage.addEventListener('dragstart', e => e.preventDefault());
+
+  /* ---------- scroll + resize ---------- */
+  addEventListener('scroll', clampScroll, { passive: true });
+  addEventListener('resize', () => layout(false));
+  addEventListener('orientationchange', () => setTimeout(() => layout(true), 220));
+  if (window.visualViewport) {
+    visualViewport.addEventListener('resize', () => layout(false));
+    visualViewport.addEventListener('scroll', () => layout(false));
+  }
+
+  /* ---------- grid toggle ---------- */
+  function setGrid(on) { body.classList.toggle('gridview', on); }
+  gridBtn.addEventListener('click', () => setGrid(!body.classList.contains('gridview')));
+  gridEl.addEventListener('click', e => {
+    const f = e.target.closest('.g-cols figure');
+    if (f) openFromGrid(f);
+  });
+
+  /* ---------- lightbox ---------- */
+  let token = 0, litList = [], litIdx = 0, litFrom = 'sphere';
+  function sourceEl(item) {
+    if (litFrom === 'sphere') {
+      const i = SPHERE.indexOf(item);
+      return i >= 0 ? cards[i] : null;
+    }
+    const f = gridFigs.find(g => g.dataset.k === item.k);
+    return f && f.offsetParent ? f : null;
+  }
+  function restRects() {
+    const cur = plate.style.transform;
+    plate.style.transition = 'none';
+    plate.style.transform = 'none';
+    const pr = plate.getBoundingClientRect();
+    const sr = shotEl.getBoundingClientRect();
+    plate.style.transform = cur;
+    void plate.offsetWidth;
+    plate.style.transition = '';
+    return { pr, sr };
+  }
+  function flipTo(el) {
+    const { pr, sr } = restRects();
+    const cr = el.getBoundingClientRect();
+    const sc = Math.max(.04, cr.width / (pr.width || 1));
+    const pcx = pr.left + pr.width / 2, pcy = pr.top + pr.height / 2;
+    const scx = sr.left + sr.width / 2, scy = sr.top + sr.height / 2;
+    const dx = (cr.left + cr.width / 2) - pcx - (scx - pcx) * sc;
+    const dy = (cr.top + cr.height / 2) - pcy - (scy - pcy) * sc;
+    return `translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px) scale(${sc.toFixed(4)})`;
+  }
+  function fill(item, idx, total) {
+    const my = ++token;
+    plate.style.setProperty('--ar', (item.w / item.h).toFixed(4));
+    litImg.src = thumb(item.k);
+    litImg.alt = item.t;
+    const big = new Image();
+    big.onload = () => { if (my === token) litImg.src = big.src; };
+    big.src = full(item.k);
+    litTitle.textContent = item.t;
+    litWhere.textContent = item.p;
+    litCount.textContent = (idx + 1) + ' / ' + total;
+    litNote.textContent = item.n;
+    focused = litFrom === 'sphere' ? SPHERE.indexOf(item) : -1;
+  }
+  function openFromSphere(i) {
+    litFrom = 'sphere'; litList = SPHERE; open(i, cards[i]);
+  }
+  function openFromGrid(f) {
+    litFrom = 'grid';
+    const visible = gridFigs.filter(g => g.offsetParent);
+    litList = visible.map(g => BYKEY[g.dataset.k]);
+    open(visible.indexOf(f), f);
+  }
+  function open(idx, srcEl) {
+    litIdx = idx;
+    fill(litList[idx], idx, litList.length);
+    root.style.overflow = 'hidden';
+    lit.scrollTop = 0;
+    plate.style.transition = 'none';
+    plate.style.transform = 'none';
+    plate.style.opacity = '';
+    void plate.offsetWidth;
+    const t = flipTo(srcEl);
+    plate.style.transition = 'none';
+    plate.style.transform = t;
+    plate.style.opacity = '0';
+    void plate.offsetWidth;
+    litOpen = true;
+    body.classList.add('lit');
+    lit.setAttribute('aria-hidden', 'false');
+    plate.style.transition = '';
+    plate.style.transform = '';
+    plate.style.opacity = '';
+    setTimeout(() => { try { lit.querySelector('.close').focus({ preventScroll: true }); } catch (e) {} }, 60);
+  }
+  function step(dir) {
+    if (!litOpen || litList.length < 2) return;
+    litIdx = (litIdx + dir + litList.length) % litList.length;
+    litImg.classList.add('swap');
+    const item = litList[litIdx];
+    setTimeout(() => {
+      fill(item, litIdx, litList.length);
+      lit.scrollTop = 0;
+      const done = () => litImg.classList.remove('swap');
+      if (litImg.complete) requestAnimationFrame(done); else litImg.addEventListener('load', done, { once: true });
+    }, 160);
+  }
+  lit.querySelector('.prev').addEventListener('click', e => { e.stopPropagation(); step(-1); });
+  lit.querySelector('.next').addEventListener('click', e => { e.stopPropagation(); step(1); });
+  let sw = null;
+  shotEl.addEventListener('touchstart', e => { const t = e.touches[0]; sw = { x: t.clientX, y: t.clientY }; }, { passive: true });
+  shotEl.addEventListener('touchend', e => {
+    if (!sw) return;
+    const t = e.changedTouches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y;
+    sw = null;
+    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.3) step(dx < 0 ? 1 : -1);
+  }, { passive: true });
+
+  function closeShot() {
+    if (!litOpen) return;
+    token++;
+    const item = litList[litIdx];
+    focused = -1;
+    litOpen = false;
+    body.classList.remove('lit');
+    lit.setAttribute('aria-hidden', 'true');
+    const el = item ? sourceEl(item) : null;
+    if (el) plate.style.transform = flipTo(el);
+    plate.style.opacity = '0';
+    if (revealed) root.style.overflow = '';
+    setTimeout(() => {
+      if (litOpen) return;
+      plate.style.transition = 'none';
+      plate.style.transform = '';
+      plate.style.opacity = '';
+      void plate.offsetWidth;
+      plate.style.transition = '';
+    }, 640);
+  }
+  lit.addEventListener('click', e => {
+    if (e.target.closest('[data-close]') || e.target.classList.contains('scrim')) closeShot();
+  });
+
+  /* ---------- menu ---------- */
+  function setMenu(on) {
+    body.classList.toggle('menuopen', on);
+    menuBtn.setAttribute('aria-expanded', String(on));
+    menuBtn.setAttribute('aria-label', on ? 'Close menu' : 'Open menu');
+    menu.setAttribute('aria-hidden', String(!on));
+    if (on) menu.removeAttribute('inert'); else menu.setAttribute('inert', '');
+  }
+  menuBtn.addEventListener('click', () => setMenu(!body.classList.contains('menuopen')));
+  menu.querySelectorAll('nav a').forEach(a => a.addEventListener('click', e => {
+    if (a.getAttribute('href') === '#') e.preventDefault();
+    const g = a.getAttribute('data-grid');
+    if (g) {
+      setFilter(g, false);
+      gridEl.scrollTop = 0;
+      setGrid(true);
+    }
+    setMenu(false);
+  }));
+  $('.wordmark').addEventListener('click', e => {
+    e.preventDefault();
+    if (body.classList.contains('menuopen')) setMenu(false);
+    if (litOpen) closeShot();
+    setGrid(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  addEventListener('keydown', e => {
+    if (litOpen && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) { step(e.key === 'ArrowRight' ? 1 : -1); return; }
+    if (e.key !== 'Escape') return;
+    if (litOpen) closeShot();
+    else if (body.classList.contains('menuopen')) setMenu(false);
+    else if (body.classList.contains('gridview')) setGrid(false);
+  });
+})();
+</script>
+</body>
+</html>
